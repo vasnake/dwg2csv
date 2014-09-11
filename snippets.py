@@ -6,20 +6,21 @@
 Created on 2011-04-30
 @author: Valik
 
-сниппеты для работы с Автокадом
+AutoCAD ActiveX objects wrapper and misc. utilities.
 
-Проблема с чертежами МВК
-    отрицательные координаты можно убрать выполнив преобразование такое:
-    (trans '(-3195.939915040071400 1786.635070675984300) (handent "7598") 0)
-    что означает - из OCS в WCS. Чтобы получить UCS (ocs2ucs) надо сделать так:
-    (trans '(-3195.939915040071400 1786.635070675984300) (handent "7598") 1)
-Проблема с ними в том, что в чертежах используются системы координат OCS, UCS, WCS
-и все они по разному повернуты относительно друг друга. Это доставляет много хлопот
-при определении углов поворота (например для блоков). Хлопоты усугубляются тем, что
-API ActiveX Автокада не содержит функций для преобразования углов и, хуже того,
-выдает координаты всегда в WCS (за исключением полилиний) а углы всегда в OCS.
-Приходится выкручиваться. Мой совет - не используйте API ActiveX Автокада.
-Используйте AutoLISP.
+Discovered problems:
+    negative coords; it can be transformed from OCS to WCS by:
+        (trans '(-3195.939915040071400 1786.635070675984300) (handent "7598") 0)
+    to perform OCS2UCS:
+        (trans '(-3195.939915040071400 1786.635070675984300) (handent "7598") 1)
+In given DWG was used OCS, UCS, WCS and all these coord.systems was rotated in
+different ways. It cause a big trouble to detect true rotation angle for misc. entities.
+For blocks, for example.
+The worse thing is that AutoCAD ActiveX API can't give as methods for transformation from
+one CS to another. Beside that API give as only WCS coordinates (except for polylines) and OCS angles only.
+Don't use AutoCAD ActiveX API, use AutoLISP.
+
+From docs
 
 c:\Program Files\Common Files\Autodesk Shared\acadauto.chm
 Coordinate
@@ -61,8 +62,8 @@ http://exchange.autodesk.com/autocadarchitecture/enu/online-help/search#WS73099c
 http://www.kxcad.net/autodesk/autocad/Autodesk_AutoCAD_ActiveX_and_VBA_Developer_Guide/ws1a9193826455f5ff1a32d8d10ebc6b7ccc-6d46.htm
     util = doc.Utility # def TranslateCoordinates(self, Point, FromCoordSystem, ToCoordSystem, Displacement, OCSNormal):
     coordinateWCS = ThisDrawing.Utility.TranslateCoordinates(firstVertex, acOCS, acWorld[acUCS], False, plineNormal)
-
 '''
+
 
 def getModule(sModuleName):
     import comtypes.client
@@ -103,10 +104,11 @@ def CType(obj, interface):
 def point2str(xyz):
     return u'%0.16f, %0.16f' % (xyz[0], xyz[1])
 
+
 class VacEntity (object):
     ''' EntityType adapter (c:\program...\Autodesk Topobase Client 2011\Help\acadauto.chm)
-    базовый класс для работы с координатами примитивов (координаты приходят в WCS, за исключением особых случаев)
-    и доп.свойствами
+    Basic class for entity coordinates and properties.
+    Coords in WCS except for some rare cases
     '''
     def __init__(self, item=''):
         super(VacEntity, self).__init__()
@@ -118,8 +120,10 @@ class VacEntity (object):
 
     def toStr(self):
         return u'%s;%s;%s;%s;%s' % (self.coords, self.angle, self.name, self.closed, self.radius)
+
     def __str__(self):
         return self.toStr()
+
     def __repr__(self):
         return self.toStr()
 
@@ -151,6 +155,7 @@ radius это радиус для окружности и дуги; для бл�
 
     def heads(self):
         return u'coords, angle, text, closed, radius'
+
     def values(self):
         return u'%s//%s//%s//%s//%s' % (self.coords, self.angle, self.name, self.closed, self.radius)
 
@@ -167,8 +172,9 @@ radius это радиус для окружности и дуги; для бл�
         sp = VAcad.trans(sp, AutoCAD.acOCS, AutoCAD.acWorld, norm)
         cx = VAcad.trans(cx, AutoCAD.acOCS, AutoCAD.acWorld, norm)
         cy = VAcad.trans(cy, AutoCAD.acOCS, AutoCAD.acWorld, norm)
+
         return (sp,cx,cy)
-#	def getWCSpointsFromOCSangle(self, pnt, norm, angle=0.0):
+#    def getWCSpointsFromOCSangle(self, pnt, norm, angle=0.0):
 #class VacEntity
 
 

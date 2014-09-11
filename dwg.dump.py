@@ -51,10 +51,10 @@ import traceback
 import csv
 import comtypes.client
 
+from snippets import *
+
 # c:\Python25\Lib\site-packages\comtypes\gen\_D32C213D_6096_40EF_A216_89A3A6FB82F7_0_1_0.py
 import comtypes.gen.AutoCAD as AutoCAD
-
-from snippets import *
 
 cp = 'utf-8'
 ecErr = 1

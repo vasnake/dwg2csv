@@ -19,11 +19,10 @@ For make it work you will need MS Windows, Autodesk AutoCAD, Python >= 2.5.
 Contents:
 
 * dwg.dump.py -- export program, work with current AutoCAD drawing unless you're run this script with a parameter: filename.dwg.
-* snippets.py -- вспомогательный код.
-* dwg.list
-* rip.cmd
-
-trig.py - функции преобразования координат и примитивов (типа аппроксимации дуг линейными сегментами).
+* snippets.py -- AutoCAD ActiveX objects wrapper.
+* trig.py -- functions for coordinates transformation and other math stuff.
+* dwg.list -- list of input dwg files example.
+* rip.cmd -- runner cmd script example.
 
 test.py - набор тестов, демонстрирующих восстановление примитивов Автокада из сохраненных данных.
 
