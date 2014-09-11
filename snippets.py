@@ -8,15 +8,16 @@ Created on 2011-04-30
 
 AutoCAD ActiveX objects wrapper and misc. utilities.
 
-Discovered problems:
+Discovered problems
     negative coords; it can be transformed from OCS to WCS by:
         (trans '(-3195.939915040071400 1786.635070675984300) (handent "7598") 0)
     to perform OCS2UCS:
         (trans '(-3195.939915040071400 1786.635070675984300) (handent "7598") 1)
-In given DWG was used OCS, UCS, WCS and all these coord.systems was rotated in
+
+In given DWG several coord. systems was used (OCS, UCS, WCS) and all these coord. systems was rotated in
 different ways. It cause a big trouble to detect true rotation angle for misc. entities.
 For blocks, for example.
-The worse thing is that AutoCAD ActiveX API can't give as methods for transformation from
+The worse thing is that AutoCAD ActiveX API didn't have methods for transformation from
 one CS to another. Beside that API give as only WCS coordinates (except for polylines) and OCS angles only.
 Don't use AutoCAD ActiveX API, use AutoLISP.
 
@@ -76,16 +77,17 @@ def GetLibPath():
     c:\ObjectARX2011\inc-win32\
     """
     import _winreg, os, sys
-    key = _winreg.OpenKey(_winreg.HKEY_CLASSES_ROOT, \
+    key = _winreg.OpenKey(_winreg.HKEY_CLASSES_ROOT,
         "TypeLib\\{D32C213D-6096-40EF-A216-89A3A6FB82F7}\\1.0\\0\\win32")
     res = _winreg.QueryValueEx(key, '')[0]
     print >> sys.stderr, ('lib [%s]' % (res))
     return os.path.dirname(res)
 
 def NewObj(MyClass, MyInterface):
-    """Creates a new comtypes POINTER object where\n\
-    MyClass is the class to be instantiated,\n\
-    MyInterface is the interface to be assigned"""
+    """Creates a new comtypes POINTER object where
+    MyClass is the class to be instantiated,
+    MyInterface is the interface to be assigned
+    """
     from comtypes.client import CreateObject
     try:
         ptr = CreateObject(MyClass, interface=MyInterface)
@@ -128,29 +130,39 @@ class VacEntity (object):
         return self.toStr()
 
     def description(self):
-        s = u'Общая проблема экспорта координат заключается в том, что координаты нам дают в WCS (обычно)\n\
-  а углы определены для OCS (обычно). К тому, в Автокаде нет функций перевода углов из одной КС в другую.\n\
-  Примеры восстановления примитивов из вынутых данных см.в коде тестов.\n\
-coords это список координат (WCS) вида х, у[, ...] в зависимости от типа элемента: \n\
-  для блока - точка вставки, доп.точка (д.т.) вектора с углом поворота блока, д.т. вектора с углом 0, д.т. вект. с углом 90 град.;\n\
-  список точек для линий;\n\
-  список точек и булжей для полилиний;\n\
-  для текста - InsertionPoint, TextAlignmentPoint, доп.точка (д.т.) вектора с углом поворота текста, д.т. вектора с углом 0, д.т. вект. с углом 90 град.;\n\
-  центр для окружности;\n\
-  Center, StartPoint, EndPoint, MidPoint для дуги.\n\
-  Поскольку значения углов Автокадом не переводятся из одной КС в другую, приходится углы, заданные в OCS, определять\n\
-  через дополнительные точки в WCS. Доп.точка вместе с точкой вставки дает вектор с определенным углом поворота\n\
-  вокруг точки вставки, относительно направления оси X. Вектор (точка вставки, доп.точка вектора с углом 0) дает направление оси Х в OCS.\n\
-  Точка полилинии может предваряться булжем - (bulge f) x, y - значит эта и след.точки образуют дуговой сегмент;\n\
-  значение булжа записано для WCS.\n\
-  Дуга всегда рисуется против часовой стрелки (start-end), но это справедливо только в CS дуги (OCS),\n\
-  поэтому я сохраняю три точки дуги, однозначно ее определяющие (при этом старт может оказаться эндом).\n\
-angle это Rotation для блока и текста; StartAngle, EndAngle для дуг. Углы в радианах OCS если не указано другое.\n\
-text это имя для блока; текст надписи для текста.\n\
-closed для полилиний True если замкнутая полилиния (полигон);\n\
-    для текста - имя стиля (StyleName).\n\
-radius это радиус для окружности и дуги; для блока - XScaleFactor, YScaleFactor;\n\
-    для текста - Alignment, VerticalAlignment, HorizontalAlignment, Height, ScaleFactor, Backward.'
+        s = (
+            u"This export tool have a major CS (coordinate system) problem. \n"
+            u"  We have coordinates in WCS (mostly) and angles in OCS (mostly). \n"
+            u"  Plus, API didn't have methods for angle transformation from one CS to another. \n"
+            u"  You can see examples of importing data back to AutoCAD in tests code. \n"
+            u"Fields meaning: \n"
+            u"coords: list of entity coordinates in WCS in form 'x, y[, ...]' \n"
+            u"  block coords contains insertion point, rotation vector point, zero angle vector point, \n"
+            u"    90 grad vector point. \n"
+            u"  line coords: list of points. \n"
+            u"  polyline: list of points and bulges. \n"
+            u"  text: insertion point, text alignment point, rotation vector point, \n"
+            u"    zero angle vector point, 90 grad vector point. \n"
+            u"  circle: center point. \n"
+            u"  arc: center point, start point, end point, middle point. \n"
+            u"Comments for coords: \n"
+            u"Rotation vector point needed for detect rotation angle in WCS. \n"
+            u"  That point with insertion point give as a vector with certain angle toward X axis, \n"
+            u"  rotation angle. Insertion point and zero angle poing give as an X axis direction in OCS. \n"
+            u"Polyline point may be preceded by bulge in form '(bulge f) x, y, ...'. \n"
+            u"  It means that next two points make a bulge segment of polyline. Bulge value given for WCS. \n"
+            u"Arc always drawn counterclockwise, from start to end point. \n"
+            u"  But because it's true only in OCS I save a middle point. \n"
+            u"Other fields: \n"
+            u"angle: rotation angle for block, text. Start and end angles for arc. \n"
+            u"  Measured in radians for OCS. \n"
+            u"text: block name; text for text. \n"
+            u"closed: for polyline - if true then polyline closed and form a polygon. \n"
+            u"  For text it's a style name. \n"
+            u"radius: for arc and circle it is a radius. For block it's a \n"
+            u"  X scale factor, Y scale factor. For text it is a set of parameters: \n"
+            u"  Alignment, VerticalAlignment, HorizontalAlignment, Height, ScaleFactor, Backward."
+        )
         return s
 
     def heads(self):

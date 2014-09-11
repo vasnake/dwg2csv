@@ -9,16 +9,16 @@ For data processing and scripting the Python was selected because it's my favori
 
 Export from DWG (AutoCAD) to CSV.
 
-COM (ActiveX) AutoCAD API used for access to drawing entities and extract geometry and attributes from them.
+COM (ActiveX) AutoCAD API used for access to drawing entities and for extracting geometry and attributes from them.
 
-Python modules comtypes.client, comtypes.gen used for interaction with AutoCAD.
-Module csv.writer used for data export.
+Python modules `comtypes.client`, `comtypes.gen` used for interaction with AutoCAD.
+Module `csv.writer` used for data export.
 
 For make it work you will need MS Windows, Autodesk AutoCAD, Python >= 2.5.
 
 Contents:
 
-* dwg.dump.py -- export program, work with current AutoCAD drawing unless you're run this script with a parameter: filename.dwg.
+* dwg.dump.py -- exporting program, work with current AutoCAD drawing unless you're run this script with a parameter: filename.dwg.
 * snippets.py -- AutoCAD ActiveX objects wrapper.
 * trig.py -- functions for coordinates transformation and other math stuff.
 * dwg.list -- list of input dwg files example.
@@ -33,3 +33,6 @@ att\FacetBulge_rev1.zip - формулы (некорректные местам�
 csv.lob2ora.py - загрузка данных из CSV в таблицу Оракла, используются CLOB для поля с координатами.
 
 csv2ora.cmd - пакетная загрузка в Оракл.
+
+http://vasnake.blogspot.com/2011/06/export-from-dwg-to-csv.html
+http://vasnake.blogspot.com/search/label/Autodesk
