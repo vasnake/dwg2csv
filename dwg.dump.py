@@ -46,21 +46,23 @@ extra info:
     topobase\objectarx_2011_win_64_and_32bit.exe
 '''
 
+import os, sys, time
+import traceback
+import csv
+import comtypes.client
+
+# c:\Python25\Lib\site-packages\comtypes\gen\_D32C213D_6096_40EF_A216_89A3A6FB82F7_0_1_0.py
+import comtypes.gen.AutoCAD as AutoCAD
+
+from snippets import *
 
 cp = 'utf-8'
 ecErr = 1
 ecOK = 0
 
-import os, sys, time
-import traceback
-import csv
-import comtypes.client
-from snippets import *
-import comtypes.gen.AutoCAD as AutoCAD # c:\Python25\Lib\site-packages\comtypes\gen\_D32C213D_6096_40EF_A216_89A3A6FB82F7_0_1_0.py
-
 
 def doWork(dwg=''):
-    ''' распотрошить чертеж
+    ''' Dump data from DWG
     '''
     print 'doWork...'
     #~ axDump()
@@ -82,21 +84,22 @@ def doWork(dwg=''):
 
 def comtypesDump():
     '''
-    Перебор обьектов из ModelSpace текущего чертежа; вывод данных обьектов в файл dwgname.csv
-    techdata:
+    Enumerate objects from ModelSpace in current DWG;
+    output objects data to file dwgname.csv.
+
     eXtended data sample:
     xd(
         (1001, 1000),
         (u'ESMA', u'/99:T1000000/00:"\u041e\u043f\u043e\u0440\u043d\u044b\u0435 \u0442\u043e\u0447\u043a\u0438"/')
     )
 
-    object dump sample:
+    dumped object sample:
     num [428], item [name [AcDbPolyline], type [24], lyr [В_ГИЛЬЗА], id [2127705120],
         attr [00:"Гильза водопровода";99:56044000;ДМ:800;МТ:жб],
         xd [/99:56044000/ДМ:800/МТ:жб/00:"Гильза водопровода"/],
         ent [(2227.5499999999993, 1791.6200000000003, 2222.6399999999994, 1798.1900000000001);;;False;]]
 
-    stats:
+    stats sample:
     objects count [18809]
     layers [
         0:16;
@@ -124,6 +127,7 @@ def comtypesDump():
     idDict = VCountStrings()
     noXDCount = 0
     csvWriter = VcsvWriter('%s.csv' % VAcad.doc.Name)
+
     for i in range(count):
         #~ if i > 100: break
         item = VacItem(VAcad.ms.Item(i))
@@ -145,11 +149,12 @@ def comtypesDump():
             noXDCount += 1
 
         if i == 0:
-            csvWriter.writerow([(u'DWG file: %s\nObjects: %u\nUCSMatrix: %r\n' % \
-                (VAcad.doc.FullName, count, VAcad.getUCSMatrix())).encode(cp) \
-                + item.description(cp)])
-            csvWriter.writerow([u'dwg']+item.listHeads(cp))
-        csvWriter.writerow([VAcad.doc.Name[:-4]]+item.listValues(cp))
+            csvWriter.writerow([(u'DWG file: %s\nObjects: %u\nUCSMatrix: %r\n' %
+                (VAcad.doc.FullName, count, VAcad.getUCSMatrix())).encode(cp) +
+                item.description(cp)])
+            csvWriter.writerow([u'dwg'] + item.listHeads(cp))
+
+        csvWriter.writerow([VAcad.doc.Name[:-4]] + item.listValues(cp))
 
         #~ if item.handle == '7598': break
         #~ if item.handle == '73DD': break
@@ -164,25 +169,32 @@ def comtypesDump():
 
 
 class VcsvWriter:
-    ''' writer = csv.writer(csv_stream, delimiter=exportDelimiter, quotechar=exportEscape, quoting=csv.QUOTE_ALL, lineterminator='\n')
+    ''' Wrapper for csv.writer
+
+    writer = csv.writer(csv_stream, delimiter=exportDelimiter, quotechar=exportEscape,
+        quoting=csv.QUOTE_ALL, lineterminator='\n')
     writer.writerow([description])
     '''
     def __init__(self, fname='t.csv'):
         self.fname = fname
         self.fileObj = open(fname, 'wb')
-        self.csvWriter = csv.writer(self.fileObj, \
-            delimiter=';', quotechar="'", quoting=csv.QUOTE_ALL, lineterminator='\n')
+        self.csvWriter = csv.writer(self.fileObj,
+            delimiter=';', quotechar="'", quoting=csv.QUOTE_ALL,
+            lineterminator='\n')
+
     def __del__(self):
         del self.csvWriter
         self.fileObj.close()
+
     def writerow(self, row):
         self.csvWriter.writerow(row)
 #class VcsvWriter:
 
 
 class VacItem:
-    ''' собирает данные из примитива Автокада
-    доступны доп.атрибуты: color,TrueColor,Visible,Material,Linetype,Lineweight
+    ''' Wrapper for ACAD.ModelSpace.item.
+
+    Unprocessed attribs: color, TrueColor, Visible, Material, Linetype, Lineweight
     '''
     def __init__(self, item=''):
         self.name = ''
@@ -194,13 +206,17 @@ class VacItem:
         self.ent = ''
         self.handle = ''
         if item: self.configure(item)
+
     def toStr(self):
         return u'name [%s], type [%s], lyr [%s], id [%s], hndl [%s], attr [%s], xd [%s], ent [%s]' % \
             (self.name, self.etype, self.lyr, self.id, self.handle, self.attr2str(), self.xd2[1], self.ent)
+
     def __str__(self):
         return self.toStr()
+
     def __repr__(self):
         return self.toStr()
+
     def attr2str(self):
         return dict2string(self.attr)
 
@@ -219,7 +235,6 @@ attribs это расширенные данные элемента (XData).\n%s
         s = u'%s//%u//%s//%u//%s//%s//%s' % \
             (self.name, self.etype, self.lyr, self.id, self.handle, self.attr2str(), self.ent.values())
         return s.encode(codepage).split('//')
-
 
     def configure(self, acItem):
         self.name = acItem.ObjectName
@@ -241,7 +256,7 @@ attribs это расширенные данные элемента (XData).\n%s
         #~ en = acItem.EntityName
         #~ if en != self.name:
             #~ raise NameError('ObjectName != EntityName [%s %s]' % (self.name, en))
-#	def configure(self, acItem):
+#    def configure(self, acItem):
 
 
     def makeEntity(self, etype, acItem):
@@ -261,16 +276,18 @@ attribs это расширенные данные элемента (XData).\n%s
             self.ent = VacPoint(acItem)
         else:
             self.ent = ''
+
         return self.ent
-#	def makeEntity(self, etype, acItem):
+#    def makeEntity(self, etype, acItem):
 #class VacItem:
 
 
 class VCountStrings:
-    ''' для каждой строки поддерживает счетчик - сколько раз ее добавили
+    ''' Strings collection with counting number of adding for every string
     '''
     def __init__(self):
         self.dict = {}
+
     def push(self, str):
         num = 0
         if str in self.dict:
@@ -278,10 +295,13 @@ class VCountStrings:
         num += 1
         self.dict[str] = num
         return num
+
     def toStr(self):
         return dict2string(self.dict)
+
     def __str__(self):
         return self.toStr()
+
     def __repr__(self):
         return self.toStr()
 #class VCountStrings:

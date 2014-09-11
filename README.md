@@ -18,12 +18,19 @@ For make it work you will need MS Windows, Autodesk AutoCAD, Python >= 2.5.
 
 Contents:
 
-* dwg.dump.py - export program, process current AutoCAD drawing unless you're use this script with a parameter: filename.dwg.
+* dwg.dump.py -- export program, work with current AutoCAD drawing unless you're run this script with a parameter: filename.dwg.
+* snippets.py -- вспомогательный код.
+* dwg.list
+* rip.cmd
 
-snippets.py - вспомогательный код.
 trig.py - функции преобразования координат и примитивов (типа аппроксимации дуг линейными сегментами).
+
 test.py - набор тестов, демонстрирующих восстановление примитивов Автокада из сохраненных данных.
+
 uuidgen.py - демо генерации UUID, случайно затесалось, не нужно в проекте.
+
 att\FacetBulge_rev1.zip - формулы (некорректные местами) превращения дуговых сегментов (bulge) полилиний в отрезки, отсюда: http://www.cadtutor.net/forum/showthread.php?51511-Points-along-a-lwpoly-arc&
+
 csv.lob2ora.py - загрузка данных из CSV в таблицу Оракла, используются CLOB для поля с координатами.
+
 csv2ora.cmd - пакетная загрузка в Оракл.
