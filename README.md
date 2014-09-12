@@ -23,8 +23,7 @@ Contents:
 * trig.py -- functions for coordinates transformation and other math stuff.
 * dwg.list -- list of input dwg files example.
 * rip.cmd -- runner cmd script example.
-
-test.py - набор тестов, демонстрирующих восстановление примитивов Автокада из сохраненных данных.
+* test.py -- tests for recovery DWG entities from exported data.
 
 uuidgen.py - демо генерации UUID, случайно затесалось, не нужно в проекте.
 
