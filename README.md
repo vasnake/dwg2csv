@@ -25,13 +25,11 @@ Contents:
 * rip.cmd -- runner cmd script example.
 * test.py -- tests for recovery DWG entities from exported data.
 
-uuidgen.py - демо генерации UUID, случайно затесалось, не нужно в проекте.
+* csv.lob2ora.py -- CSV to Oracle loader, load exported data to Oracle DB using cx_Oracle. For coords data CLOB field was used because of data size.
+* csv2ora.cmd -- cmd script for csv2ora loader.
 
-att\FacetBulge_rev1.zip - формулы (некорректные местами) превращения дуговых сегментов (bulge) полилиний в отрезки, отсюда: http://www.cadtutor.net/forum/showthread.php?51511-Points-along-a-lwpoly-arc&
-
-csv.lob2ora.py - загрузка данных из CSV в таблицу Оракла, используются CLOB для поля с координатами.
-
-csv2ora.cmd - пакетная загрузка в Оракл.
+extra/autocad.bulge/FacetBulge_rev1.zip -- some formulas (partly correct) from
+http://www.cadtutor.net/forum/showthread.php?51511-Points-along-a-lwpoly-arc
 
 http://vasnake.blogspot.com/2011/06/export-from-dwg-to-csv.html
 http://vasnake.blogspot.com/search/label/Autodesk
