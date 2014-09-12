@@ -8,7 +8,7 @@ Created on 2011-05-28
 
 Python >= 2.5
 
-Утилиты по преобразованию координат и примитивов, вынутых ранее из AutoCAD
+Coordinates and entities transformation tools.
 '''
 
 import os, sys, math
@@ -20,12 +20,13 @@ ecOK = 0
 
 
 class AutoLISP:
-    ''' AutoLISP functions
+    ''' AutoLISP functions copycat
     '''
     @staticmethod
-    def angle(x1,y1, x2,y2):
-        ''' AutoLISP angle in range [0 - 2Pi]
+    def angle(x1, y1, x2, y2):
+        ''' AutoLISP angle in range [0:2Pi]
         Returns the angle between line [p1,p2] and X axis.
+
         http://www.afralisp.net/reference/autolisp-functions.php#A
         (angle <PT1> <PT2>) Returns the angle in radians between two points (no way!)
         Second version:
@@ -35,15 +36,15 @@ class AutoLISP:
         '''
         res = math.atan2(y2-y1, x2-x1)
         if res < 0:
-            res = (2*math.pi) + res
+            res = (2 * math.pi) + res
         return res
 
     @staticmethod
     def angleP(p1, p2):
-        return AutoLISP.angle(p1[0],p1[1], p2[0],p2[1])
+        return AutoLISP.angle(p1[0], p1[1], p2[0], p2[1])
 
     @staticmethod
-    def polar(x1,y1, phi, dist):
+    def polar(x1, y1, phi, dist):
         ''' AutoLISP polar
         This function (polar) returns the point at an angle (in radians) and distance from a given point
         http://www.afralisp.net/reference/autolisp-functions.php#P
@@ -58,7 +59,8 @@ class AutoLISP:
         return AutoLISP.polar(pnt[0], pnt[1], phi, dist)
 #class AutoLISP:
 
-def pyAngle(x1,y1, x2,y2):
+
+def pyAngle(x1, y1, x2, y2):
     ''' Returns the angle between line [p1,p2] and X axis.
     Range [-Pi - Pi]
     '''
@@ -69,11 +71,9 @@ def sign(n):
     return 1.0
 
 def floatIsEqual(v1, v2, accuracy=0.001):
-    if abs(abs(float(v1)) - abs(float(v2))) > accuracy:
-        return False
+    '''http://stackoverflow.com/questions/4028889/floating-point-equality-in-python
+    '''
     if abs(float(v1) - float(v2)) <= accuracy:
-        return True
-    if abs((-1.0*float(v1)) + float(v2)) <= accuracy:
         return True
     return False
 
@@ -90,9 +90,9 @@ def rotationAngle(cx, cy, centerP, origAngle):
     ''' Get mirroring mark and rotation angle (in current CS) for block or text,
     based on two vectors and saved angle.
     @type	cx: tuple
-    @param	cx: Point (x,y) for vector (centerP,cx). This vector is origin zero angle vector.
+    @param	cx: Point (x,y) for vector (centerP, cx). This vector is origin zero angle vector.
     @type	cy: tuple
-    @param	cy: Point (x,y) for vector (centerP,cy). This vector is origin PI/2 angle vector.
+    @param	cy: Point (x,y) for vector (centerP, cy). This vector is origin PI/2 angle vector.
     @type	centerP: tuple
     @param	centerP: Center Point (x,y) for two vectors, e.g. this is insertion point for block.
     @type	origAngle: number
@@ -124,7 +124,7 @@ def rotationAngle(cx, cy, centerP, origAngle):
 
 
 class Vwcs2ucs:
-    '''
+    '''Examples:
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
     # detect origin angle for UCS
     zp = wcs2ucs(ucsMatrix, 0.0, 0.0)
@@ -164,11 +164,15 @@ class Vwcs2ucs:
 
     def wcs2ucs(self, x, y, z=0.0):
         ''' transform point from WCS to UCS
+
+        Returns point (xt, yt, zt)
+
         http://exchange.autodesk.com/autocadarchitecture/enu/online-help/browse#WS73099cc142f4875516d84be10ebc87a53f-7a23.htm
         (a1,a2,a3) (b1,b2,b3), (c1,c2,c3), (d1,d2,d3)
         xt = x*a1 + y*b1 + z*c1 + d1
         yt = x*a2 + y*b2 + z*c2 + d2
         zt = x*a3 + y*b3 + z*c3 + d3
+
         ucs2wcx (http://ru.wikipedia.org/wiki/%D0%9C%D0%B5%D1%82%D0%BE%D0%B4_%D0%9A%D1%80%D0%B0%D0%BC%D0%B5%D1%80%D0%B0):
         x = delta1/delta
         y = delta2/delta
@@ -226,58 +230,79 @@ def wcs2ucsP(matrix, pnt):
 def unzipBulge(x1, y1, x2, y2, bulge, sublen=0.0, algo=1):
     ''' Convert AutoCAD polyline segment with bulge to arc (radius, center, angles, start-stop points)
     and to approximating line segments (facets).
+
     If sublen == 0 then facetlen = 2*pi*r / 30
+
     Formula sources:
-    att\FacetBulge_rev1.zip\FacetBulge\BulgeCalc_Rev1.xls (wrong formula)
-    http://www.cadtutor.net/forum/showthread.php?51511-Points-along-a-lwpoly-arc&
-    http://www.afralisp.net/archive/lisp/Bulges1.htm (good formula)
-Because a circular arc describes a portion of the circumference of a circle, it has all the attributes of a circle:
-    Radius (r) is the same as in the circle the arc is a portion of.
-    Center point (P) is also the same as in the circle.
-    Included angle (θ). In a circle, this angle is 360 degrees.
-    Arc length (le). The arc length is equal to the perimeter in a full circle.
-Adding to these attributes are some that are specific for an arc:
-    Start point and end point (P1 and P2) a.k.a. vertices (although sometimes it is practical to talk about specific points that a circle passes through, there are no distinct vertices on the circumference of a circle).
-    Chord length (c). An infinite amount of chords can be described by both circles and arcs, but for an arc there is only one distinct chord that passes through its vertices (for a circle, there is only one distinct chord that passes through the center, the diameter, but it doesn't describe any specific vertices).
-    Given two fixed vertices, there is also a specific midpoint (P3) of an arc.
-    The apothem (a). This line starts at the center and is perpendicular to the chord.
-    The sagitta (s) a.k.a. height of the arc. This line is drawn from the midpoint of an arc and perpendicular to its chord.
-The bulge is the tangent of 1/4 of the included angle for the arc between the
-    selected vertex and the next vertex in the polyline's vertex list.
-    A negative bulge value indicates that the arc goes clockwise from the selected vertex to the next vertex.
-    A bulge of 0 indicates a straight segment, and a bulge of 1 is a semicircle.
+        att\FacetBulge_rev1.zip\FacetBulge\BulgeCalc_Rev1.xls (wrong formula)
+        http://www.cadtutor.net/forum/showthread.php?51511-Points-along-a-lwpoly-arc&
+        http://www.afralisp.net/archive/lisp/Bulges1.htm (good formula)
+
+    Because a circular arc describes a portion of the circumference of a circle,
+        it has all the attributes of a circle:
+        Radius (r) is the same as in the circle the arc is a portion of.
+        Center point (P) is also the same as in the circle.
+        Included angle (θ). In a circle, this angle is 360 degrees.
+        Arc length (le). The arc length is equal to the perimeter in a full circle.
+
+    Adding to these attributes are some that are specific for an arc:
+        Start point and end point (P1 and P2) a.k.a. vertices (although sometimes
+        it is practical to talk about specific points that a circle passes through,
+        there are no distinct vertices on the circumference of a circle).
+        Chord length (c). An infinite amount of chords can be described by both
+        circles and arcs, but for an arc there is only one distinct chord that
+        passes through its vertices (for a circle, there is only one distinct
+        chord that passes through the center, the diameter, but it doesn't describe
+        any specific vertices).
+        Given two fixed vertices, there is also a specific midpoint (P3) of an arc.
+        The apothem (a). This line starts at the center and is perpendicular to the chord.
+        The sagitta (s) a.k.a. height of the arc. This line is drawn from the midpoint
+        of an arc and perpendicular to its chord.
+
+    The bulge is the tangent of 1/4 of the included angle for the arc between the
+        selected vertex and the next vertex in the polyline's vertex list.
+        A negative bulge value indicates that the arc goes clockwise from the
+        selected vertex to the next vertex.
+        A bulge of 0 indicates a straight segment, and a bulge of 1 is a semicircle.
     '''
-    print 'calcBulge: p1 [%s], p2 [%s], bulge [%s], sublen [%s]' % ((x1,y1), (x2,y2), bulge, sublen)
+    print 'calcBulge: p1 [%s], p2 [%s], bulge [%s], sublen [%s]' % (
+        (x1,y1), (x2,y2), bulge, sublen)
     res = {}
-# midpoint (F9, G9) # arc midpoint [(12.41925, 13.5352)]; // 16.73, 11.77
+
+    # midpoint (F9, G9) # arc midpoint [(12.41925, 13.5352)]; // 16.73, 11.77
     mx1 = (x1 + x2) / 2.0
     my1 = (y1 + y2) / 2.0
     s1 = 'chord midpoint [%s]' % ((mx1, my1),)
     res['chordmidpoint'] = (mx1, my1)
-# angle (K13) # angle/2 (K14)
+
+    # angle (K13) # angle/2 (K14)
     angle = math.atan(bulge) * 4.0
     angleDeg = angle * (180.0 / math.pi)
     s2 = 'arc angle [%0.5f] rad, [%0.5f] deg' % (angle, angleDeg)
     res['angleRad'] = angle
     res['angleDeg'] = angleDeg
-# dist (F5)
+
+    # dist (F5)
     dist = math.sqrt((x2-x1)**2 + (y2-y1)**2)
     s3 = 'chord len [%0.5f]' % dist
     res['chordLen'] = dist
-# sagitta length (http://en.wikipedia.org/wiki/Sagitta_%28geometry%29)
+
+    # sagitta length (http://en.wikipedia.org/wiki/Sagitta_%28geometry%29)
     sagitta = dist/2.0 * bulge
-# radius (K15) # r = ((dist/2.0)**2+sagitta**2)/2.0*sagitta
+    # radius (K15) # r = ((dist/2.0)**2+sagitta**2)/2.0*sagitta
     radius = 1.e99
     if not angle == 0.0:
         radius = (dist/2.0) / math.sin( abs(angle/2.0) )
     if radius == 0.0: radius = 1.e-99
     s4 = 'radius [%0.5f]' % radius
     res['radius'] = radius
-# arc length (F14) l = 2*pi*r
+
+    # arc length (F14) l = 2*pi*r
     alen = abs(radius * angle)
     s5 = 'arc length [%0.5f]' % alen
     res['arcLen'] = alen
-# center (F19, G19)
+
+    # center (F19, G19)
     t = '''
     bad algo:
         k5 = ( (math.sqrt(radius**2 - (dist / 2.0)**2))*2 ) / dist
@@ -299,14 +324,16 @@ The bulge is the tangent of 1/4 of the included angle for the arc between the
     cx,cy = AutoLISP.polar(x1,y1, phi, radius)
     s6 = 'arc center [%s]' % ((cx, cy),)
     res['center'] = (cx, cy)
-# start, end angle (G21, G22)
+
+    # start, end angle (G21, G22)
     startAngle = math.acos((x1 - cx) / radius)
     if not sign(y1 - cy) > 0:
         startAngle = (2.0 * math.pi) - startAngle
     endAngle = startAngle + angle
     s7 = 'start, end arc angles [%s]' % ((startAngle, endAngle),)
     res['seAngles'] = (startAngle, endAngle)
-# subangle (F27), numsub (# of Divisions K26)
+
+    # subangle (F27), numsub (# of Divisions K26)
     if sublen <= 0.0:
         numsub = abs(angle / 0.2) # 30 segments for full circle
         try: sublen = alen / numsub
@@ -317,10 +344,12 @@ The bulge is the tangent of 1/4 of the included angle for the arc between the
         numsub = 1
     subangle = angle / numsub
     s8 = 'numsub, subangle [%s]' % ((numsub, subangle),)
-# length of subarc L27
+
+    # length of subarc L27
     realSublen = abs(2 * (math.sin(subangle/2.0) * radius) )
     s9 = 'real sublen [%0.5f]' % realSublen
-# sub points
+
+    # sub points
     listPoints = [(x1,y1)]
     t = ''' diff between 2 algo:
     unzipBulge(50.0, 0.0, -50.0, 0.0, 1, 1)
@@ -347,9 +376,12 @@ The bulge is the tangent of 1/4 of the included angle for the arc between the
 
     listPoints.append((x2, y2))
     res['points'] = listPoints
-    print 'doBulge done [%s; %s; %s; %s; %s; %s; %s; %s; %s; subpoints %s]' % (s1,s2,s3,s4,s5,s6,s7,s8,s9,listPoints)
+
+    print 'unzipBulge done [%s; %s; %s; %s; %s; %s; %s; %s; %s; subpoints %s]' % (
+        s1, s2, s3, s4, s5, s6, s7, s8, s9, listPoints)
     return res
 #def unzipBulge(x1, y1, x2, y2, bulge, sublen=0.0, algo=1):
+
 
 def unzipBulge2(p1, p2, bulge, sublen):
     ''' p1, p2 - points like (x,y,z)
@@ -360,7 +392,9 @@ def unzipBulge2(p1, p2, bulge, sublen):
 def getArcBulge(center, start, end, startangle=-1, endangle=-1):
     ''' get bulge value for AutoCAD arc.
     It works only if start and end are in correct positions.
+
     center, start, end - is points like (x,y)
+
     An arc is always drawn counterclockwise from the start point to the endpoint (in UCS!).
     The bulge is the tangent of 1/4 of the included angle for the arc between the
     selected vertex and the next vertex.
@@ -369,7 +403,8 @@ def getArcBulge(center, start, end, startangle=-1, endangle=-1):
     if startangle == -1:
         startangle = AutoLISP.angle(center[0], center[1], start[0],start[1])
         endangle = AutoLISP.angle(center[0], center[1], end[0],end[1])
-    print 'startangle [%s], endangle [%s]' % (math.degrees(startangle), math.degrees(endangle))
+    print 'startangle [%s], endangle [%s]' % (
+        math.degrees(startangle), math.degrees(endangle))
     ang = endangle - startangle
     if ang < 0: ang = math.radians(360) + ang
     bulge = math.tan(ang/4.0)
@@ -378,7 +413,7 @@ def getArcBulge(center, start, end, startangle=-1, endangle=-1):
 
 def normArcAngles(startangle, endangle, delta=0.0, back=False):
     ''' in normal form arc always have endangle > startangle
-    So, let's rotate pie.
+    So, let's rotate
     '''
     if back:
         startangle = math.radians(360) - delta
@@ -391,7 +426,7 @@ def normArcAngles(startangle, endangle, delta=0.0, back=False):
         endangle += delta
         startangle = 0.0
     return (startangle, endangle, delta)
-#def normArcAngles(startangle, endangle, delta=0.0, back=False):
+
 
 def getArcMidpointP(center, radius, startpoint, endpoint):
     startangle = AutoLISP.angle(center[0], center[1], startpoint[0],startpoint[1])
@@ -421,12 +456,13 @@ def detectArcStartEnd(center, start, end, midpoint):
 
 
 ################################################################################
-
+# Some tests
+################################################################################
 
 def test (pl, norm):
     if pl == norm:
         return
-    raise NameError('test NOT passed sample [%s], paragon [%s]' % (pl, norm))
+    raise NameError('test NOT passed. Sample [%s], paragon [%s]' % (pl, norm))
 
 def testArcMidpoint():
     ''' 'DRAWING3';'AcDbArc';'4';'0';'2127698424';'
@@ -445,24 +481,24 @@ def testArcMidpoint():
 
 def testUCSMatrix():
     ''' http://exchange.autodesk.com/autocadarchitecture/enu/online-help/browse#WS73099cc142f4875516d84be10ebc87a53f-7a23.htm
-(a1,a2,a3) (b1,b2,b3), (c1,c2,c3), (d1,d2,d3)
-x = x*a1 + y*b1 + z*c1 + d1
-y = x*a2 + y*b2 + z*c2 + d2
-z = x*a3 + y*b3 + z*c3 + d3
+    (a1,a2,a3) (b1,b2,b3), (c1,c2,c3), (d1,d2,d3)
+    x = x*a1 + y*b1 + z*c1 + d1
+    y = x*a2 + y*b2 + z*c2 + d2
+    z = x*a3 + y*b3 + z*c3 + d3
 
-(setq h (handent "7598") o (command "zoom" "o" h "") o (redraw h 3))
+    (setq h (handent "7598") o (command "zoom" "o" h "") o (redraw h 3))
 
-WCS
-'+01+02';'AcDbPolyline';'24';'В_ТЕКСТ_УЗЛЫ';'2127975424';'7598';'';'
-    (bulge 0.26052) 3195.9399150400714000, 1786.6350706759843000,
-    (bulge 0.58605) 3196.4541498123590000, 1785.7151197495145000,
-    3194.8100081997472000, 1784.7941722803723000
-    ';'';'';'False';''
-UCSMatrix: ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
-UCS
-at point  X=1786.6351  Y=3195.9399  Z=   0.0000
-at point  X=1785.7151  Y=3196.4541  Z=   0.0000
-at point  X=1784.7942  Y=3194.8100  Z=   0.0000
+    WCS
+    '+01+02';'AcDbPolyline';'24';'В_ТЕКСТ_УЗЛЫ';'2127975424';'7598';'';'
+        (bulge 0.26052) 3195.9399150400714000, 1786.6350706759843000,
+        (bulge 0.58605) 3196.4541498123590000, 1785.7151197495145000,
+        3194.8100081997472000, 1784.7941722803723000
+        ';'';'';'False';''
+    UCSMatrix: ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
+    UCS
+    at point  X=1786.6351  Y=3195.9399  Z=   0.0000
+    at point  X=1785.7151  Y=3196.4541  Z=   0.0000
+    at point  X=1784.7942  Y=3194.8100  Z=   0.0000
     '''
     print
     print 'testUCSMatrix...'
@@ -494,7 +530,6 @@ def testAngle():
     print math.degrees(AutoLISP.angle(0,0, 1,-1))
     print
 #def testAngle():
-
 
 def testTrig():
     testArcMidpoint()
