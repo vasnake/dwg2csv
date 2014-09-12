@@ -18,7 +18,7 @@ In given DWG several coord. systems was used (OCS, UCS, WCS) and all these coord
 different ways. It cause a big trouble to detect true rotation angle for misc. entities.
 For blocks, for example.
 The worse thing is that AutoCAD ActiveX API didn't have methods for transformation from
-one CS to another. Beside that API give as only WCS coordinates (except for polylines) and OCS angles only.
+one CS to another. Beside that API give us only WCS coordinates (except for polylines) and OCS angles only.
 Don't use AutoCAD ActiveX API, use AutoLISP.
 
 From docs
@@ -64,6 +64,9 @@ http://www.kxcad.net/autodesk/autocad/Autodesk_AutoCAD_ActiveX_and_VBA_Developer
     util = doc.Utility # def TranslateCoordinates(self, Point, FromCoordSystem, ToCoordSystem, Displacement, OCSNormal):
     coordinateWCS = ThisDrawing.Utility.TranslateCoordinates(firstVertex, acOCS, acWorld[acUCS], False, plineNormal)
 '''
+
+import math, array
+import trig
 
 
 def getModule(sModuleName):
@@ -147,8 +150,8 @@ class VacEntity (object):
             u"  arc: center point, start point, end point, middle point. \n"
             u"Comments for coords: \n"
             u"Rotation vector point needed for detect rotation angle in WCS. \n"
-            u"  That point with insertion point give as a vector with certain angle toward X axis, \n"
-            u"  rotation angle. Insertion point and zero angle poing give as an X axis direction in OCS. \n"
+            u"  That point with insertion point give us a vector with certain angle toward X axis, \n"
+            u"  rotation angle. Insertion point and zero angle poing give us an X axis direction in OCS. \n"
             u"Polyline point may be preceded by bulge in form '(bulge f) x, y, ...'. \n"
             u"  It means that next two points make a bulge segment of polyline. Bulge value given for WCS. \n"
             u"Arc always drawn counterclockwise, from start to end point. \n"
@@ -172,10 +175,12 @@ class VacEntity (object):
         return u'%s//%s//%s//%s//%s' % (self.coords, self.angle, self.name, self.closed, self.radius)
 
     def getWCSpointsFromOCSangle(self, pnt, norm, angle=0.0):
-        ''' возвращает три точки, определяющие направления осей OCS и угол в OCS.
-        Три точки дают три вектора, исходящих из pnt - точка вставки блока, к примеру.
-        cx - направление оси Х, cy - оси У, sp - угол поворота.
-        Эта информация потом используется для преобразования угла поворота в таковой для других СК.
+        '''Returns tuple with three points (sp, cx, cy)
+        cx: point in WCS, vector [pnt, cx] give us direction for OCS X axis.
+        cy: point in WCS, vector [pnt, cy] give us direction for OCS Y axis.
+        sp: point in WCS, vector [pnt, sp] give us rotation angle.
+
+        Used for rotation angle transformation from one CS to another.
         '''
         p = VAcad.trans(pnt, AutoCAD.acWorld, AutoCAD.acOCS, norm)
         sp = trig.AutoLISP.polarP(p, angle, 100)
@@ -185,18 +190,21 @@ class VacEntity (object):
         cx = VAcad.trans(cx, AutoCAD.acOCS, AutoCAD.acWorld, norm)
         cy = VAcad.trans(cy, AutoCAD.acOCS, AutoCAD.acWorld, norm)
 
-        return (sp,cx,cy)
+        return (sp, cx, cy)
 #    def getWCSpointsFromOCSangle(self, pnt, norm, angle=0.0):
 #class VacEntity
 
 
 class VacBlock (VacEntity):
-    ''' ##class IAcadBlockReference
+    '''IAcadBlockReference wrapper
     acBlockReference = 7
-    доп.атрибуты: HasAttributes,GetAttributes,GetConstantAttributes,IsDynamicBlock,GetDynamicBlockProperties,
-    InsUnitsFactor,X(Y)ScaleFactor,X(Y)EffectiveScaleFactor,InsUnits,EffectiveName.
+
+    extra attribs:
+        HasAttributes,GetAttributes,GetConstantAttributes,IsDynamicBlock,
+        GetDynamicBlockProperties, InsUnitsFactor,X(Y)ScaleFactor,
+        X(Y)EffectiveScaleFactor,InsUnits,EffectiveName
     coords: InsertionPoint, SecondPoint, X-axis, Y-axis
-    Три точки после точки вставки дают (для WCS) угол поворота, направление осей Х и У соответственно.
+        SecondPoint, X-axis, Y-axis: three points that defines rotation angle, OCS X,Y axis in WCS
     '''
     def __init__(self, item=''):
         super(VacBlock, self).__init__(item)
@@ -211,20 +219,22 @@ class VacBlock (VacEntity):
         sp,cx,cy = self.getWCSpointsFromOCSangle(self.coords, norm, self.angle)
         self.coords = u'%s, %s, %s, %s' % (point2str(self.coords), point2str(sp), point2str(cx), point2str(cy))
         #~ self.angle = u'%s, %s' % (self.angle, VAcad.ocs2wcsAngle(self.angle, norm))
-#	def __init__(self, item=''):
 #class VacBlock (VacEntity)
 
+
 class VacLWPolyline (VacEntity):
-    ''' ##class IAcadLWPolyline
-    # acPolylineLight = 24
-    доп.атрибуты: Thickness,ConstantWidth
-    coords: x, y[,...] или (bulge n) x, y[,...] и добавляется еще одна точка для замыкания, если есть атрибут Closed.
-    bulge это характеристика каждой точки (сегмента, начинающегося с данной точки),
-    если булж != 0.0 то сегмент суть дуга, определяемая через две точки сегмента и булж.
-    Сохраняются данные в WCS, хотя в самом AutoCAD координаты полилиний даны в OCS, булж определен для для OCS
-    (все остальные координаты в WCS).
-    coordinateWCS = ThisDrawing.Utility.TranslateCoordinates(firstVertex, acOCS, acWorld, False, plineNormal)
-    coordinateUCS = ThisDrawing.Utility.TranslateCoordinates(firstVertex, acOCS, acUCS, False, plineNormal)
+    '''IAcadLWPolyline wrapper
+    acPolylineLight = 24
+
+    extra attribs: Thickness,ConstantWidth
+    coords: x, y[,...] in WCS
+        or (bulge n) x1, y1, x2, y2[,...]
+
+    bulge it's a two-point segment curvature, in OCS.
+
+    AutoCAD coords transformation:
+        coordinateWCS = ThisDrawing.Utility.TranslateCoordinates(firstVertex, acOCS, acWorld, False, plineNormal)
+        coordinateUCS = ThisDrawing.Utility.TranslateCoordinates(firstVertex, acOCS, acUCS, False, plineNormal)
     '''
     def __init__(self, item=''):
         super(VacLWPolyline, self).__init__(item)
@@ -233,9 +243,10 @@ class VacLWPolyline (VacEntity):
         self.closed = o.Closed
         self.coords = o.Coordinates
         if self.closed:
-            # если клозед, то надо добавить еще одну точку в конец, идентичную первой, и проверить последний булж!
+            # add closing point
             self.coords = self.coords + (self.coords[0], self.coords[1])
 
+        # format WCS coords string with bulges
         llen = len(self.coords)
         norm = o.Normal
         bsign = self.getWCSBulgeSign(norm)
@@ -255,9 +266,7 @@ class VacLWPolyline (VacEntity):
 #	def __init__(self, item=''):
 
     def getWCSBulgeSign(self, norm):
-        ''' надо правильно определить знак булжа в WCS, ибо изначально он для OCS.
-        Метод детектирования смены направления хода часовой стрелки
-        основан на измерении углов, известных для OCS.
+        '''Detect bulge sign in WCS using predefined vectors in OCS
         '''
         p0 = VAcad.trans((0.0, 0.0, 0.0), AutoCAD.acOCS, AutoCAD.acWorld, norm)
         p1 = VAcad.trans((2.0, 1.0, 0.0), AutoCAD.acOCS, AutoCAD.acWorld, norm)
@@ -267,73 +276,83 @@ class VacLWPolyline (VacEntity):
 
 
 class VacText (VacEntity):
-    ''' ##class IAcadText
-    # acText = 32
-    доп.атрибуты: Thickness,Height,VerticalAlignment,ObliqueAngle,HorizontalAlignment,
+    '''IAcadText wrapper
+    acText = 32
+
+    extra attribs: Thickness,Height,VerticalAlignment,ObliqueAngle,HorizontalAlignment,
         StyleName,ScaleFactor,Alignment
-    To position text whose justification is other than left, aligned, or fit, use the TextAlignmentPoint.
     coords: InsertionPoint, TextAlignmentPoint, SecondPoint, X-axis, Y-axis
-    расшифровку см. в описании VacBlock.
+        meanings same as for VacBlock
     closed: StyleName
     radius: Alignment, VerticalAlignment, HorizontalAlignment, Height, ScaleFactor, Backward
+
+    To position text whose justification is other than left, aligned, or fit, use the TextAlignmentPoint.
     '''
     def __init__(self, item=''):
         super(VacText, self).__init__(item)
         if not item: return
         o = CType(item, AutoCAD.IAcadText)
-        self.coords = (o.InsertionPoint, o.TextAlignmentPoint) # u'%s, %s' % (point2str(o.InsertionPoint), point2str(o.TextAlignmentPoint))
+        self.coords = (o.InsertionPoint, o.TextAlignmentPoint)
         self.name = o.TextString
         self.angle = o.Rotation
-        self.radius = u'%s, %s, %s, %s, %s, %s' % \
-            (o.Alignment, o.VerticalAlignment, o.HorizontalAlignment, o.Height, o.ScaleFactor, o.Backward)
+        self.radius = u'%s, %s, %s, %s, %s, %s' % (
+            o.Alignment, o.VerticalAlignment, o.HorizontalAlignment, o.Height, o.ScaleFactor, o.Backward)
         self.closed = o.StyleName
 
         norm = o.Normal
         sp,cx,cy = self.getWCSpointsFromOCSangle(self.coords[0], norm, self.angle)
-        self.coords = u'%s, %s, %s, %s, %s' % (point2str(self.coords[0]), point2str(self.coords[1]), \
+        self.coords = u'%s, %s, %s, %s, %s' % (
+            point2str(self.coords[0]), point2str(self.coords[1]),
             point2str(sp), point2str(cx), point2str(cy))
         #~ self.angle = u'%s, %s' % (self.angle, VAcad.ocs2wcsAngle(self.angle, norm))
 #class VacText (VacEntity)
 
+
 class VacLine (VacEntity):
-    ''' ##class IAcadLine
-    # acLine = 19
-    доп.атрибуты: Thickness
+    '''IAcadLine wrapper
+    acLine = 19
+
+    extra attribs: Thickness
     '''
     def __init__(self, item=''):
         super(VacLine, self).__init__(item)
         if not item: return
         o = CType(item, AutoCAD.IAcadLine)
-        #~ self.coords = (o.StartPoint, o.EndPoint)
         self.coords = u'%s, %s' % (point2str(o.StartPoint), point2str(o.EndPoint))
 #class VacLine (VacEntity)
 
+
 class VacCircle (VacEntity):
-    ''' ##class IAcadCircle
-    # acCircle = 8
-    доп.атрибуты: Thickness
+    '''IAcadCircle wrapper
+    acCircle = 8
+
+    extra attribs: Thickness
     '''
     def __init__(self, item=''):
         super(VacCircle, self).__init__(item)
         if not item: return
         o = CType(item, AutoCAD.IAcadCircle)
-        #~ self.coords = o.Center
         self.coords = point2str(o.Center)
         self.radius = o.Radius
 #class VacCircle (VacEntity)
 
+
 class VacArc (VacEntity):
-    ''' ##class IAcadArc
-    # acArc = 4
-    доп.атрибуты: Thickness
+    '''IAcadArc wrapper
+    acArc = 4
+
+    extra attribs: Thickness
     coords: Center, StartPoint, EndPoint, MidPoint
-    Поскольку углы из OCS в WCS не преобразуются, определение дуги пишется четырьмя точками.
-    MidPoint это точка на середине дуги.
+        the reason why arc defined by four points in WCS is that
+        angles can't be transformed from OCS to WCS directly.
+        MidPoint is a point on the middle of the arc.
+
     c:\Program Files\Common Files\Autodesk Shared\acadauto.chm
         An arc is always drawn counterclockwise from the start point to the endpoint.
         The StartPoint and EndPoint properties of an arc are calculated through the
         StartAngle, EndAngle, and Radius properties.
-    Направление дуги определяется для UCS а координаты в WCS.
+
+    Arc direction given in UCS and coords in WCS.
     '''
     def __init__(self, item=''):
         super(VacArc, self).__init__(item)
@@ -341,10 +360,14 @@ class VacArc (VacEntity):
         o = CType(item, AutoCAD.IAcadArc)
         c,s,e = (o.Center, o.StartPoint, o.EndPoint)
         sa,ea = (o.StartAngle, o.EndAngle)
-        self.coords = u'%s, %s, %s' % (point2str(c), point2str(s), point2str(e)) # WCS
+        # WCS
+        self.coords = u'%s, %s, %s' % (point2str(c), point2str(s), point2str(e))
+
         self.radius = o.Radius
-        self.angle = u'%s, %s' % (sa, ea) # radians
-# get midpoint
+        # radians
+        self.angle = u'%s, %s' % (sa, ea)
+
+        # get midpoint
         norm = o.Normal
         c = VAcad.trans(c, AutoCAD.acWorld, AutoCAD.acOCS, norm)
         s = VAcad.trans(s, AutoCAD.acWorld, AutoCAD.acOCS, norm)
@@ -354,10 +377,12 @@ class VacArc (VacEntity):
         self.coords = u'%s, %s' % (self.coords, point2str(m))
 #class VacArc (VacEntity)
 
+
 class VacPoint (VacEntity):
-    ''' ##class IAcadPoint
+    '''IAcadPoint wrapper
     acPoint = 22
-    доп.атрибуты: Thickness
+
+    extra attribs: Thickness
     '''
     def __init__(self, item=''):
         super(VacPoint, self).__init__(item)
@@ -368,7 +393,7 @@ class VacPoint (VacEntity):
 
 
 class VAcadServices:
-    ''' для полилиний необходимо трансформировать координаты из OCS в WCS.
+    '''Tools and services for transformations, etc.
     '''
     def __init__(self):
         import comtypes.client
@@ -399,7 +424,6 @@ class VAcadServices:
             p = self.u.TranslateCoordinates(p, csFrom, csTo, disp)
         return p
 
-
     def ocs2wcsAngle(self, angle, norm):
         ''' transform angle from OCS to WCS
         '''
@@ -414,7 +438,6 @@ class VAcadServices:
 
         ta = (self.bulgeSign * self.zeroAngle) + (self.bulgeSign * angle)
         return trig.normAngle2pi(ta)
-
 
     def getUCSMatrix(self):
         ''' Autodesk Shared\acadauto.chm
@@ -462,11 +485,10 @@ class VAcadServices:
 
 
 try:
-    import comtypes.gen.AutoCAD as AutoCAD # c:\Python25\Lib\site-packages\comtypes\gen\_D32C213D_6096_40EF_A216_89A3A6FB82F7_0_1_0.py
+    # c:\Python25\Lib\site-packages\comtypes\gen\_D32C213D_6096_40EF_A216_89A3A6FB82F7_0_1_0.py
+    import comtypes.gen.AutoCAD as AutoCAD
 except:
     getModule('acax18ENU.tlb') # comtypes.gen.AutoCAD
-    import comtypes.gen.AutoCAD as AutoCAD # c:\Python25\Lib\site-packages\comtypes\gen\_D32C213D_6096_40EF_A216_89A3A6FB82F7_0_1_0.py
-import math, array
-import trig
+    import comtypes.gen.AutoCAD as AutoCAD
 
 VAcad = VAcadServices()
