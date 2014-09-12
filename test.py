@@ -8,7 +8,7 @@ Created on 2011-06-08
 
 Python >= 2.5
 
-Тесты на воспроизводимость координат и примитивов, вынутых ранее из AutoCAD, и всё такое
+Recovery drawing entities from exported data tests
 '''
 
 import os, sys, math
@@ -18,10 +18,11 @@ cp = 'utf-8'
 ecErr = 1
 ecOK = 0
 
+
 def test (s, norm):
     if s == norm:
         return
-    raise NameError('test NOT passed sample [%s], paragon [%s]' % (s, norm))
+    print('test NOT passed, sample [%s], paragon [%s]' % (s, norm))
 
 def pline(pts):
     s = ''
@@ -48,20 +49,18 @@ def parsePoint(p):
     return (bulge,float(x),float(y))
 #def parsePoint(p):
 
-
 ################################################################################
 
 def testBlockReference():
 
-    from trig import wcs2ucs,wcs2ucsP,AutoLISP,getUCSBulgeSign
-    from trig import Vwcs2ucs,normAngle2pi,rotationAngle,floatIsEqual
+    from trig import wcs2ucs, wcs2ucsP, AutoLISP, getUCSBulgeSign
+    from trig import Vwcs2ucs, normAngle2pi, rotationAngle, floatIsEqual
 
     def block(pnt, name, xscale, yscale, angle):
         res = '(setq o (command "insert" "%s" \'(%0.15f %0.15f) %0.3f %0.3f %0.5f))' % \
             (name, pnt[0], pnt[1], xscale, yscale, angle)
         print res
         return res
-#	def block(pnt, name, scale, angle):
 
     def testBlock(dat, paragon, tm):
         lst = dat.split('\t')
@@ -81,18 +80,17 @@ def testBlockReference():
         ucsCY,ucsCX,ucsP,ucsSP = ( tm.wcs2ucsP(cy), tm.wcs2ucsP(cx), tm.wcs2ucsP(p), tm.wcs2ucsP(sp) )
         pline( (ucsCX,ucsP,ucsCY,ucsSP) )
         zDir,ucsA = rotationAngle(ucsCX, ucsCY, ucsP, ocsA)
-#		print ';angles, deg.: ucs [%s], ocs [%s]. Zdir [%s]' % (math.degrees(ucsA), math.degrees(ocsA), zDir)
+        # print ';angles, deg.: ucs [%s], ocs [%s]. Zdir [%s]' % (math.degrees(ucsA), math.degrees(ocsA), zDir)
         test(block(ucsP, nm, xsc*zDir, ysc, math.degrees(normAngle2pi(ucsA))), paragon)
         print
-#	def testBlock(dat, paragon, trans):
 
-#~ .\data\dwg.dump\+01+02.dwg
+    #~ .\data\dwg.dump\+01+02.dwg
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
     trans = Vwcs2ucs()
     trans.config(ucsMatrix)
     print
 
-#~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
+    #~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
     t = '+01+02	AcDbBlockReference	7	ЗД_БЕНЗОКОЛОНКИ_Т	2129542992	6BB2	00:"Запр. станции и бензоколонки";99:51220000	2722.1499999999996000, 1115.9400000000001000, 2822.1499999999996000, 1115.9400000000001000, 2822.1499999999996000, 1115.9400000000001000, 2722.1499999999996000, 1215.9400000000001000	0.0, 0.0	AZS		1.0, 1.0'
     paragon = '(setq o (command "insert" "AZS" \'(1115.940000000000100 2722.149999999999600) -1.000 1.000 270.00000))'
     testBlock(t, paragon, trans)
@@ -133,13 +131,13 @@ def testBlockReference():
     paragon = '(setq o (command "insert" "HIDRANT" \'(1008.708620069882700 2888.635766896854900) -2.000 2.000 273.12867))'
     testBlock(t, paragon, trans)
 
-#~ .\data\dwg.dump\+01+03.dwg
+    #~ .\data\dwg.dump\+01+03.dwg
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
     trans = Vwcs2ucs()
     trans.config(ucsMatrix)
     print
 
-#~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
+    #~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
     t = '+01+03	AcDbBlockReference	7	В_ГИДРАНТ	2124665920	1BC0		3129.5610861052091000, 1528.4911634508862000, 3223.8790209230019000, 1495.2627543450226000, 3029.5610861052091000, 1528.4911634508862000, 3129.5610861052091000, 1628.4911634508862000	3.48031689218, 5.94446106859	HIDRANT		2.0, 2.0'
     paragon = '(setq o (command "insert" "HIDRANT" \'(1528.491163450886200 3129.561086105209100) 2.000 2.000 109.40747))'
     testBlock(t, paragon, trans) #~ углы должны быть (приблизительно): WCS 160,OCS 199,UCS 109
@@ -188,13 +186,13 @@ def testBlockReference():
     paragon = '''(setq o (command "insert" "LANTERN" '(1901.560000000000900 3494.060000000000400) -1.000 1.000 270.00000))'''
     testBlock(t, paragon, trans)
 
-#~ .\data\dwg.dump\+01+04.dwg
+    #~ .\data\dwg.dump\+01+04.dwg
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
     trans = Vwcs2ucs()
     trans.config(ucsMatrix)
     print
 
-#~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
+    #~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
     t = '+01+04	AcDbBlockReference	7	В_ГИДРАНТ	2119865976	2CE7	00:Гидрант;99:56046000	4224.1117928160320000, 1453.9448657725547000, 4220.4769162715320000, 1553.8787822999593000, 4324.1117928160320000, 1453.9448657725547000, 4224.1117928160320000, 1553.9448657725547000	1.6071531012, 1.6071531012	HIDRANT		2.0, 2.0'
     paragon = '''(setq o (command "insert" "HIDRANT" '(1453.944865772554700 4224.111792816032000) -2.000 2.000 177.91691))'''
     testBlock(t, paragon, trans)
@@ -251,13 +249,13 @@ def testBlockReference():
     paragon = '''(setq o (command "insert" "WELLTS" '(1829.420000000000800 4660.940000000000500) -1.000 1.000 270.00000))'''
     testBlock(t, paragon, trans)
 
-#~ .\data\dwg.dump\+02+02.dwg
+    #~ .\data\dwg.dump\+02+02.dwg
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
     trans = Vwcs2ucs()
     trans.config(ucsMatrix)
     print
 
-#~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
+    #~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
     t = '+02+02	AcDbBlockReference	7	ПР_ГЕО_ПУНКТЫ	2124564296	B119	00:"Пункты ГГС";09:Пушкинская;99:11200000	2988.1499999999992000, 2160.7400000000002000, 3088.1499999999992000, 2160.7400000000002000, 3088.1499999999992000, 2160.7400000000002000, 2988.1499999999992000, 2260.7400000000002000	0.0, 0.0	GGS_POINT		1.0, 1.0'
     paragon = '''(setq o (command "insert" "GGS_POINT" '(2160.740000000000200 2988.149999999999200) -1.000 1.000 270.00000))'''
     testBlock(t, paragon, trans)
@@ -302,13 +300,13 @@ def testBlockReference():
     paragon = '''(setq o (command "insert" "HIDRANT" '(2028.403082000000300 2270.550781999999800) -2.000 2.000 303.38274))'''
     testBlock(t, paragon, trans)
 
-#~ .\data\dwg.dump\+02+03.dwg
+    #~ .\data\dwg.dump\+02+03.dwg
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
     trans = Vwcs2ucs()
     trans.config(ucsMatrix)
     print
 
-#~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
+    #~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
     t = '+02+03	AcDbBlockReference	7	В_ФОНТАН	2117178384	2702	00:"Фонтан питьевой";99:56045100	3932.1899999999991000, 2127.7500000000005000, 4032.1899999999991000, 2127.7500000000005000, 4032.1899999999991000, 2127.7500000000005000, 3932.1899999999991000, 2227.7500000000005000	0.0, 0.0	FOUNTAIN		1.0, 1.0'
     paragon = '''(setq o (command "insert" "FOUNTAIN" '(2127.750000000000500 3932.189999999999100) -1.000 1.000 270.00000))'''
     testBlock(t, paragon, trans)
@@ -353,14 +351,13 @@ def testBlockReference():
     paragon = '''(setq o (command "insert" "ААА" '(2870.307644313795700 3478.470419189357900) 1.000 1.000 258.24053))'''
     testBlock(t, paragon, trans)
 
-#~ .\data\dwg.dump\+02+04.dwg
+    #~ .\data\dwg.dump\+02+04.dwg
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
     trans = Vwcs2ucs()
     trans.config(ucsMatrix)
     print
 
-#~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
-
+    #~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
     t = '+02+04	AcDbBlockReference	7	В_ФОНТАН	2120676824	8F3	00:"Фонтан питьевой";99:56045100	4706.1099999999988000, 2816.4700000000003000, 4806.1099999999988000, 2816.4700000000003000, 4806.1099999999988000, 2816.4700000000003000, 4706.1099999999988000, 2916.4700000000003000	0.0, 0.0	FOUNTAIN		1.0, 1.0'
     paragon = '''(setq o (command "insert" "FOUNTAIN" '(2816.470000000000300 4706.109999999998800) -1.000 1.000 270.00000))'''
     testBlock(t, paragon, trans)
@@ -406,23 +403,21 @@ def testBlockReference():
 
 
 def testCircle():
-
-    from trig import wcs2ucs,wcs2ucsP,AutoLISP,getUCSBulgeSign
-    from trig import Vwcs2ucs,normAngle2pi,rotationAngle,unzipBulge2
+    from trig import wcs2ucs, wcs2ucsP, AutoLISP, getUCSBulgeSign
+    from trig import Vwcs2ucs, normAngle2pi, rotationAngle, unzipBulge2
 
     def circle(c, rad):
         ''' (setq o (command "circle" '(2000.000000000001100 5000.000000000000000) 50 ))
         '''
-        res = '''(setq o (command "circle" '(%0.15f %0.15f) %0.15f ))''' % \
-            (c[0], c[1], rad)
+        res = '''(setq o (command "circle" '(%0.15f %0.15f) %0.15f ))''' % (
+            c[0], c[1], rad)
         print res
         return res
-#	def circle(c, rad):
 
     def circleEntity(dat, paragon, tm):
         lst = dat.split('\t')
-        h = lst[5] # handle
-        lp = lst[7].split(', ') # coords list
+        h = lst[5]  # handle
+        lp = lst[7].split(', ')  # coords list
         radius = float(lst[11])
         bulge,x,y = parsePoint(lp)
         c = tm.wcs2ucsP((x,y))
@@ -430,15 +425,14 @@ def testCircle():
         print '(setq h (handent "%s") o (redraw h 3) o (command "zoom" "o" h ""))' % h
         test(circle(c, radius), paragon)
         print
-#	def circleEntity(dat, paragon, tm):
 
-#~ .\data\dwg.dump\+02+04.dwg.csv
+    #~ .\data\dwg.dump\+02+04.dwg.csv
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
     trans = Vwcs2ucs()
     trans.config(ucsMatrix)
     print
 
-#~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
+    #~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
     t = '+02+04	AcDbCircle	8	В_КОЛОДЕЦ	2128192792	26DB		4234.8723382428707000, 2545.6443423411306000				1.23643565775'
     paragon = '''(setq o (command "circle" '(2545.644342341130600 4234.872338242870700) 1.236435657750000 ))'''
     circleEntity(t, paragon, trans)
@@ -452,14 +446,13 @@ def testCircle():
 
 
 def testArc():
-
-    from trig import wcs2ucs,wcs2ucsP,AutoLISP,getUCSBulgeSign,detectArcStartEnd
-    from trig import Vwcs2ucs,normAngle2pi,rotationAngle,unzipBulge2,getArcBulge
+    from trig import wcs2ucs, wcs2ucsP, AutoLISP, getUCSBulgeSign, detectArcStartEnd
+    from trig import Vwcs2ucs, normAngle2pi, rotationAngle, unzipBulge2, getArcBulge
 
     def arcEntity(dat, paragon, tm):
         lst = dat.split('\t')
-        h = lst[5] # handle
-        lp = lst[7].split(', ') # coords list (c, s, e, m)
+        h = lst[5]  # handle
+        lp = lst[7].split(', ')  # coords list (c, s, e, m)
         plen = len(lp)
         points = []
         pts = []
@@ -478,15 +471,14 @@ def testArc():
         print '(setq h (handent "%s") o (redraw h 3) o (command "zoom" "o" h ""))' % h
         test(pline( res['points'] ), paragon)
         print
-#	def arcEntity(dat, paragon, tm):
 
-#~ .\data\dwg.dump\+02+04.dwg.csv
+    #~ .\data\dwg.dump\+02+04.dwg.csv
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
     trans = Vwcs2ucs()
     trans.config(ucsMatrix)
     print
 
-#~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
+    #~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
     t = '+02+04	AcDbArc	4	В_ТЕКСТ_УЗЛЫ	2128220832	24B4		5061.7378255128042000, 2638.9920103622517000, 5061.4835404392416000, 2636.6080312971353000, 5061.4835404392416000, 2641.3759894273680000, 5059.3403232538794000, 2638.9920103622517000	4.81865134371, 1.46453396347			2.39750225893'
     paragon = '''(setq o (command "pline" '(2636.608031297135300 5061.483540439241600) '(2636.702678206477200 5061.025803489206700) '(2636.884342242179600 5060.595130375340900) '(2637.146118385103800 5060.207890909544400) '(2637.478056568524600 5059.878803998133700) '(2637.867539878474900 5059.620378178709900) '(2638.299764120503800 5059.442436172771500) '(2638.758300524592400 5059.351741525738400) '(2639.225720199910900 5059.351741525738400) '(2639.684256603999500 5059.442436172771500) '(2640.116480846028500 5059.620378178709900) '(2640.505964155978700 5059.878803998133700) '(2640.837902339399500 5060.207890909544400) '(2641.099678482323700 5060.595130375340900) '(2641.281342518026100 5061.025803489206700) '(2641.375989427368000 5061.483540439241600) ))'''
     arcEntity(t, paragon, trans)
@@ -500,33 +492,31 @@ def testArc():
 
 
 def testPoint():
-    from trig import wcs2ucs,wcs2ucsP,AutoLISP,getUCSBulgeSign
-    from trig import Vwcs2ucs,normAngle2pi,rotationAngle,unzipBulge2
+    from trig import wcs2ucs, wcs2ucsP, AutoLISP, getUCSBulgeSign
+    from trig import Vwcs2ucs, normAngle2pi, rotationAngle, unzipBulge2
 
     def point(p):
         res = '''(setq o (command "point" '(%0.15f %0.15f) ))''' % (p[0], p[1])
         print res
         return res
-#	def point(p):
 
     def pointEntity(dat, paragon, tm):
         lst = dat.split('\t')
-        h = lst[5] # handle
-        x,y = lst[7].split(', ') # coords list
+        h = lst[5]  # handle
+        x,y = lst[7].split(', ')  # coords list
         p = tm.wcs2ucsP((float(x), float(y)))
         print
         print '(setq h (handent "%s") o (redraw h 3) o (command "zoom" "o" h ""))' % h
         test(point( p ), paragon)
         print
-#	def pointEntity(dat, paragon, tm):
 
-#~ .\data\dwg.dump\+02+03.dwg.csv
+    #~ .\data\dwg.dump\+02+03.dwg.csv
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
     trans = Vwcs2ucs()
     trans.config(ucsMatrix)
     print
 
-#~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
+    #~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
     t = '+02+03	AcDbPoint	22	К_ХОЗФЕК	2107609632	35CC	00:Канализация хф;99:56061000;A3:;ДМ:150;МТ:	3518.3800000000001000, 2941.6999999999998000'
     paragon = '''(setq o (command "point" '(2941.699999999999800 3518.380000000000100) ))'''
     pointEntity(t, paragon, trans)
@@ -536,14 +526,13 @@ def testPoint():
 
 
 def testLine():
-
-    from trig import wcs2ucs,wcs2ucsP,AutoLISP,getUCSBulgeSign
-    from trig import Vwcs2ucs,normAngle2pi,rotationAngle,unzipBulge2
+    from trig import wcs2ucs, wcs2ucsP, AutoLISP, getUCSBulgeSign
+    from trig import Vwcs2ucs, normAngle2pi, rotationAngle, unzipBulge2
 
     def lineEntity(dat, paragon, tm):
         lst = dat.split('\t')
-        h = lst[5] # handle
-        lp = lst[7].split(', ') # coords list
+        h = lst[5]  # handle
+        lp = lst[7].split(', ')  # coords list
         plen = len(lp)
         points = []
         pts = []
@@ -558,15 +547,14 @@ def testLine():
         print '(setq h (handent "%s") o (redraw h 3) o (command "zoom" "o" h ""))' % h
         test(pline( pts ), paragon)
         print
-#	def lineEntity(dat, paragon, tm):
 
-#~ .\data\dwg.dump\+02+04.dwg.csv
+    #~ .\data\dwg.dump\+02+04.dwg.csv
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
     trans = Vwcs2ucs()
     trans.config(ucsMatrix)
     print
 
-#~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
+    #~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
     t = '+02+04	AcDbLine	19	0	2128495496	22F1		3999.9999999999991000, 3000.0000000000009000, 3999.9999999999995000, 2000.0000000000007000'
     paragon = '''(setq o (command "pline" '(3000.000000000000900 3999.999999999999100) '(2000.000000000000700 3999.999999999999500) ))'''
     lineEntity(t, paragon, trans)
@@ -580,15 +568,14 @@ def testLine():
 
 
 def testPolylineLight():
-
-    from trig import wcs2ucs,wcs2ucsP,AutoLISP,getUCSBulgeSign
-    from trig import Vwcs2ucs,normAngle2pi,rotationAngle,unzipBulge2
+    from trig import wcs2ucs, wcs2ucsP, AutoLISP, getUCSBulgeSign
+    from trig import Vwcs2ucs, normAngle2pi, rotationAngle, unzipBulge2
 
     def polylineEntity(dat, paragon, tm):
         lst = dat.split('\t')
-        h = lst[5] # handle
-        lp = lst[7].split(', ') # coords list
-        closed = lst[10] # closed
+        h = lst[5]  # handle
+        lp = lst[7].split(', ')  # coords list
+        closed = lst[10]  # closed
         plen = len(lp)
         points = []
         pts = []
@@ -597,7 +584,7 @@ def testPolylineLight():
                 points.append( (e, lp[n+1]) )
         for n,p in zip(range(len(points)), points):
             bulge,x,y = parsePoint(p)
-#			print 'parsePoint: bulge [%s], x [%s], y [%s]' % (bulge,x,y)
+            # print 'parsePoint: bulge [%s], x [%s], y [%s]' % (bulge,x,y)
             s = tm.wcs2ucsP((x,y))
             if bulge:
                 bulge = float(bulge) * tm.getUCSBulgeSign()
@@ -612,15 +599,14 @@ def testPolylineLight():
         print '(setq h (handent "%s") o (redraw h 3) o (command "zoom" "o" h ""))' % h
         test(pline( pts ), paragon)
         print
-#	def polylineEntity(dat, paragon, tm):
 
-#~ .\data\dwg.dump\+02+04.dwg.csv
+    #~ .\data\dwg.dump\+02+04.dwg.csv
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
     trans = Vwcs2ucs()
     trans.config(ucsMatrix)
     print
 
-#~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
+    #~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
     t = '+02+04	AcDbPolyline	24	В_ТЕКСТ_УЗЛЫ	2128498272	2434		(bulge -0.40485) 5167.6677942053193000, 2925.3907451592981000, (bulge -0.40485) 5168.5389312196739000, 2924.4912080961035000, 5167.6677942053193000, 2923.5916710329097000			False'
     paragon = '''(setq o (command "pline" '(2925.390745159298100 5167.667794205319300) '(2925.368640046310200 5167.839214224406500) '(2925.314174515999200 5168.003247650792200) '(2925.229357303057400 5168.153844793370800) '(2925.117316537830900 5168.285451502513800) '(2924.982184378233300 5168.393214011795000) '(2924.828944612277600 5168.473157948987100) '(2924.663248851770300 5168.522334914264300) '(2924.491208096103500 5168.538931219673900) '(2924.319167340435800 5168.522334914265200) '(2924.153471579928900 5168.473157948987100) '(2924.000231813973200 5168.393214011795000) '(2923.865099654376100 5168.285451502513800) '(2923.753058889150000 5168.153844793370800) '(2923.668241676208700 5168.003247650792200) '(2923.613776145897600 5167.839214224406500) '(2923.591671032909700 5167.667794205319300) ))'''
     polylineEntity(t, paragon, trans)
@@ -638,71 +624,69 @@ def testPolylineLight():
 
 
 def testText():
-
-    from trig import wcs2ucs,wcs2ucsP,AutoLISP,getUCSBulgeSign
-    from trig import Vwcs2ucs,normAngle2pi,rotationAngle
+    from trig import wcs2ucs, wcs2ucsP, AutoLISP, getUCSBulgeSign
+    from trig import Vwcs2ucs, normAngle2pi, rotationAngle
 
     def text(insP, txt, angle, style, height, j=0, zdir=1, alP=(0,0,0)):
         ''' (setq o (command "text" "s" "romans" "j" "ml" '(1267.298512069065500 2005.375351909133300) 3 263.13584 "119ст"))
         (setq o (command "mirror" "l" "" '(x y) '(x y) "y"))
         '''
-        res = '(setq o (command "text" "s" "%s" \'(%0.15f %0.15f) %0.5f %0.5f "%s"))' % \
-            (style, insP[0], insP[1], height, angle, txt)
+        res = '(setq o (command "text" "s" "%s" \'(%0.15f %0.15f) %0.5f %0.5f "%s"))' % (
+            style, insP[0], insP[1], height, angle, txt)
         if j == 1:
-            jstfy = 'c' # acAlignmentCenter = 1
+            jstfy = 'c'  # acAlignmentCenter = 1
             insP = alP
-            res = '(setq o (command "text" "s" "%s" "j" "%s" \'(%0.15f %0.15f) %0.5f %0.5f "%s"))' % \
-                (style, jstfy, insP[0], insP[1], height, angle, txt)
+            res = '(setq o (command "text" "s" "%s" "j" "%s" \'(%0.15f %0.15f) %0.5f %0.5f "%s"))' % (
+                style, jstfy, insP[0], insP[1], height, angle, txt)
         print res
-        if not zdir == 1: # set MIRRTEXT = 1, than mirror
+        if not zdir == 1:  # set MIRRTEXT = 1, than mirror
             mlP = AutoLISP.polarP(insP, normAngle2pi(math.radians(angle+90)), 50)
-            t = '''MIRRTEXT 1 (setq o (command "mirror" "l" "" '(%0.15f %0.15f) '(%0.15f %0.15f) "y"))''' % \
-                (insP[0], insP[1], mlP[0], mlP[1])
+            t = '''MIRRTEXT 1 (setq o (command "mirror" "l" "" '(%0.15f %0.15f) '(%0.15f %0.15f) "y"))''' % (
+                insP[0], insP[1], mlP[0], mlP[1])
             print t
         return res
-#	def text(insP, txt, angle, style, height, j=0, zdir=1, alP=(0,0,0)):
 
     def textEntity(dat, paragon, tm):
         lst = dat.split('\t')
-        h = lst[5] # handle
-        lp = lst[7].split(', ') # coords list (5 points)
-        p = (float(lp[0]), float(lp[1])) # insertion point
-        ap = (float(lp[2]), float(lp[3])) # aligment point
-        sp = (float(lp[4]), float(lp[5])) # vector p-sp with angle == text rotation angle in OCS
-        cx = (float(lp[6]), float(lp[7])) # vector p-x with angle 0 grad. in OCS
-        cy = (float(lp[8]), float(lp[9])) # vector p-y with angle 90 grad. in OCS
-        ocsA = float(lst[8]) # rotation angle in OCS
-        nm = lst[9] # text
-        style = lst[10] # StyleName
+        h = lst[5]  # handle
+        lp = lst[7].split(', ')  # coords list (5 points)
+        p = (float(lp[0]), float(lp[1]))  # insertion point
+        ap = (float(lp[2]), float(lp[3]))  # aligment point
+        sp = (float(lp[4]), float(lp[5]))  # vector p-sp with angle == text rotation angle in OCS
+        cx = (float(lp[6]), float(lp[7]))  # vector p-x with angle 0 grad. in OCS
+        cy = (float(lp[8]), float(lp[9]))  # vector p-y with angle 90 grad. in OCS
+        ocsA = float(lst[8])  # rotation angle in OCS
+        nm = lst[9]  # text
+        style = lst[10]  # StyleName
         # Alignment, VerticalAlignment, HorizontalAlignment, Height, ScaleFactor, Backward
-        alignment = int(lst[11].split(', ')[0]) # Alignment property (0,1)
+        alignment = int(lst[11].split(', ')[0])  # Alignment property (0,1)
         height = float(lst[11].split(', ')[3])
         print
         print '(setq h (handent "%s") o (redraw h 3) o (command "zoom" "o" h ""))' % h
-        ucsCY,ucsCX,ucsP,ucsSP,ucsAP = ( tm.wcs2ucsP(cy), tm.wcs2ucsP(cx), tm.wcs2ucsP(p), \
-            tm.wcs2ucsP(sp), tm.wcs2ucsP(ap) )
+        ucsCY,ucsCX,ucsP,ucsSP,ucsAP = (
+            tm.wcs2ucsP(cy), tm.wcs2ucsP(cx), tm.wcs2ucsP(p), tm.wcs2ucsP(sp), tm.wcs2ucsP(ap))
         if ap == (0.0, 0.0) or ap == (-0.0, -0.0):
-            pline( (ucsCX,ucsP,ucsCY,ucsSP) )
+            pline((ucsCX,ucsP,ucsCY,ucsSP))
         else:
-            pline( (ucsCX,ucsP,ucsCY,ucsSP,ucsAP) )
+            pline((ucsCX,ucsP,ucsCY,ucsSP,ucsAP))
         zDir,ucsA = rotationAngle(ucsCX, ucsCY, ucsP, ocsA)
         print ';zDir [%s], ucsA [%0.3f]' % (zDir, math.degrees(ucsA))
         # я пока не понял, от чего зависит зеркалирование текста, от перевертывания UCS-WCS или OCS-UCS, или еще от чего
         zDir = tm.getUCSBulgeSign()
-        test(\
-            text(ucsP, nm, math.degrees(normAngle2pi(ucsA)), style, height, j=alignment, zdir=zDir, alP=ucsAP)\
-            , paragon)
+        test(
+            text(
+                ucsP, nm, math.degrees(normAngle2pi(ucsA)),
+                style, height, j=alignment, zdir=zDir, alP=ucsAP),
+            paragon)
         print
-#	def textEntity(dat, paragon, trans):
 
-
-#~ .\data\dwg.dump\+02+04.dwg.csv
+    #~ .\data\dwg.dump\+02+04.dwg.csv
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
     trans = Vwcs2ucs()
     trans.config(ucsMatrix)
     print
 
-#~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
+    #~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
     t = '+02+04	AcDbText	32	В_	2128497504	23DC	00:Водопровод;99:56041000;A3:;ДМ:;МТ:	4660.1754282193215000, 2098.5390269819404000, 0.0000000000000000, 0.0000000000000000, 4671.7890262822248000, 2197.8623592862550000, 4760.1754282193215000, 2098.5390269819404000, 4660.1754282193215000, 2198.5390269819404000	1.45439768353	150	ROMANS	0, 0, 0, 3.0, 1.0, False'
     paragon = '''(setq o (command "text" "s" "ROMANS" '(2098.539026981940400 4660.175428219321500) 3.00000 186.66915 "150"))'''
     textEntity(t, paragon, trans)
@@ -715,14 +699,13 @@ def testText():
     paragon = '''(setq o (command "text" "s" "ROMANS" '(2768.950495122955500 4255.178518246278100) 4.40000 247.88341 "5кж"))'''
     textEntity(t, paragon, trans)
 
-
-#~ .\data\dwg.dump\+02+03.dwg.csv
+    #~ .\data\dwg.dump\+02+03.dwg.csv
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
     trans = Vwcs2ucs()
     trans.config(ucsMatrix)
     print
 
-#~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
+    #~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
     t = '+02+03	AcDbText	32	В_ТЕКСТ_УЗЛЫ	2106937760	2C5C		4226.9214796637671000, 2958.6728408830641000, 4231.6833844256716000, 2958.6728408830641000, 4326.9214796637671000, 2958.6728408830641000, 4326.9214796637671000, 2958.6728408830641000, 4226.9214796637671000, 3058.6728408830641000	0.0	2	ROMANT	1, 0, 1, 10.0, 1.0, False'
     paragon = '''(setq o (command "text" "s" "ROMANT" "j" "c" '(2958.672840883064100 4231.683384425671600) 10.00000 270.00000 "2"))'''
     textEntity(t, paragon, trans)
@@ -735,14 +718,13 @@ def testText():
     paragon = '''(setq o (command "text" "s" "ROMANS" '(2769.172792000000800 3799.315431999999900) 4.40000 336.48847 "ул.Толбухина"))'''
     textEntity(t, paragon, trans)
 
-
-#~ .\data\dwg.dump\+02+02.dwg.csv
+    #~ .\data\dwg.dump\+02+02.dwg.csv
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
     trans = Vwcs2ucs()
     trans.config(ucsMatrix)
     print
 
-#~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
+    #~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
     t = '+02+02	AcDbText	32	В_ТЕКСТ_ОФОРМЛЕНИЕ	2125083840	B668		2468.7482773333331000, 3010.6138940000005000, 2490.4149439999997000, 3010.6138940000005000, 2568.7482773333331000, 3010.6138940000005000, 2568.7482773333331000, 3010.6138940000005000, 2468.7482773333331000, 3110.6138940000005000	0.0	+2+2	ROMANT	1, 0, 1, 10.0, 1.0, False'
     paragon = '''(setq o (command "text" "s" "ROMANT" "j" "c" '(3010.613894000000500 2490.414943999999700) 10.00000 270.00000 "+2+2"))'''
     textEntity(t, paragon, trans)
@@ -755,13 +737,13 @@ def testText():
     paragon = '''(setq o (command "text" "s" "Standard" '(2570.440000000001000 2235.299999999999300) 2.00000 270.00000 "К_017"))'''
     textEntity(t, paragon, trans)
 
-#~ .\data\dwg.dump\+01+04.dwg.csv
+    #~ .\data\dwg.dump\+01+04.dwg.csv
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
     trans = Vwcs2ucs()
     trans.config(ucsMatrix)
     print
 
-#~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
+    #~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
     t = '+01+04	AcDbText	32	В_ТЕКСТ_ОФОРМЛЕНИЕ	2115479472	1FEE		4425.1755248571426000, 2031.0123800000008000, 4502.3183819999995000, 2031.0123800000008000, 4525.1755248571426000, 2031.0123800000008000, 4525.1755248571426000, 2031.0123800000008000, 4425.1755248571426000, 2131.0123800000010000	0.0	МИНСКВОДОКАНАЛ	ROMANT	1, 0, 1, 10.0, 1.0, False'
     paragon = '''(setq o (command "text" "s" "ROMANT" "j" "c" '(2031.012380000000800 4502.318381999999500) 10.00000 270.00000 "МИНСКВОДОКАНАЛ"))'''
     textEntity(t, paragon, trans)
@@ -774,13 +756,13 @@ def testText():
     paragon = '''(setq o (command "text" "s" "ROMANT" '(1011.068016000000600 5053.389734000000300) 6.00000 270.00000 "Водопровод от 3-ей группы насосов РПНС"))'''
     textEntity(t, paragon, trans)
 
-#~ .\data\dwg.dump\+01+03.dwg
+    #~ .\data\dwg.dump\+01+03.dwg
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
     trans = Vwcs2ucs()
     trans.config(ucsMatrix)
     print
 
-#~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
+    #~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
     t = '+01+03	AcDbText	32	В_ТЕКСТ_УЗЛЫ	2124651112	1C7D		4030.6924336709390000, 1663.5183232011484000, 0.0000000000000000, 0.0000000000000000, 4130.6579490955819000, 1666.1442946186426000, 4130.6924336709390000, 1663.5183232011484000, 4030.6924336709390000, 1763.5183232011484000	0.0262627331083	250	ROMANS	0, 0, 0, 3.0, 1.0, False'
     paragon = '''(setq o (command "text" "s" "ROMANS" '(1663.518323201148400 4030.692433670939000) 3.00000 268.49526 "250"))'''
     textEntity(t, paragon, trans)
@@ -801,14 +783,13 @@ def testText():
     paragon = '''(setq o (command "text" "s" "ROMANS" '(1312.002283065001400 3022.774614521513300) 3.00000 325.32604 " дезинфек. и стерилиз."))'''
     textEntity(t, paragon, trans)
 
-
-#~ .\data\dwg.dump\+01+02.dwg
+    #~ .\data\dwg.dump\+01+02.dwg
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
     trans = Vwcs2ucs()
     trans.config(ucsMatrix)
     print
 
-#~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
+    #~ dwg	typename	typenum	layer	id	handle	attribs	coords	angle	text	closed	radius
     t = '+01+02	AcDbText	32	В_ТЕКСТ	2107161072	782E		2005.3753519091333000, 1267.2985120690655000, 0.0000000000000000, 0.0000000000000000, 2104.6585812182652000, 1279.2500968154616000, 2105.3753519091333000, 1267.2985120690655000, 2005.3753519091333000, 1367.2985120690655000	0.119802220209	119ст	ROMANS	0, 0, 0, 3.0, 0.7, False'
     paragon = '''(setq o (command "text" "s" "ROMANS" '(1267.298512069065500 2005.375351909133300) 3.00000 263.13584 "119ст"))'''
     textEntity(t, paragon, trans)
@@ -833,8 +814,9 @@ def testText():
 
 
 def testBulge():
-    ''' проверка дуг и булжей на тестовых данных проведена успешно
-    '''
+    from trig import wcs2ucs, detectArcStartEnd, getArcBulge, unzipBulge2, getUCSBulgeSign
+    from trig import unzipBulge
+
     def pline(res):
         pts = res['points']
         s = ''
@@ -846,15 +828,13 @@ def testBulge():
         print res
         print
         return res
+
     print
     print 'testBulge...'
 
-    from trig import wcs2ucs,detectArcStartEnd,getArcBulge,unzipBulge2,getUCSBulgeSign
-    from trig import unzipBulge
-# real data (MVK)
-
-# arc
-#~ '+02+04'
+    # real data (MVK)
+    # arc
+    #~ '+02+04'
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
 
     print '(setq h (handent "240F") o (command "zoom" "o" h "") o (redraw h 3))'
@@ -907,7 +887,7 @@ def testBulge():
     res = unzipBulge2(s, e, bulge, 0)
     test(pline(res), "(setq o (command \"pline\" '(2512.320351389933000 5071.684813135361800) '(2512.414998299274900 5071.227076185327000) '(2512.596662334977300 5070.796403071461100) '(2512.858438477901500 5070.409163605664600) '(2513.190376661322300 5070.080076694253900) '(2513.579859971272500 5069.821650874830100) '(2514.012084213301500 5069.643708868891700) '(2514.470620617390100 5069.553014221858600) '(2514.938040292708600 5069.553014221858600) '(2515.396576696797200 5069.643708868891700) '(2515.828800938826100 5069.821650874830100) '(2516.218284248776400 5070.080076694253900) '(2516.550222432197200 5070.409163605664600) '(2516.811998575121400 5070.796403071461100) '(2516.993662610823800 5071.227076185327000) '(2517.088309520165700 5071.684813135361800) ))")
 
-#~ '+02+03'
+    #~ '+02+03'
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
 
     print '(setq h (handent "2D92") o (command "zoom" "o" h "") o (redraw h 3))'
@@ -940,7 +920,7 @@ def testBulge():
     res = unzipBulge2(s, e, bulge, 0)
     test(pline(res), "(setq o (command \"pline\" '(2762.920686339955400 4079.249993155025500) '(2763.623786677857900 4079.305999886394100) '(2764.301970060581400 4079.499788788333300) '(2764.928510882995900 4079.823723097978900) '(2765.478718651283500 4080.265037329375400) '(2765.930910976979200 4080.806340331121200) '(2766.267268028681400 4081.426300630565900) '(2766.474534769513900 4082.100487056758100) '(2766.544543306818900 4082.802331515182700) '(2766.474534769513900 4083.504175973607300) '(2766.267268028681400 4084.178362399799400) '(2765.930910976979200 4084.798322699244200) '(2765.478718651283500 4085.339625700989900) '(2764.928510882995900 4085.780939932386400) '(2764.301970060581400 4086.104874242032100) '(2763.623786677857900 4086.298663143971200) '(2762.920686339955400 4086.354669875340700) ))")
 
-#~ '+01+03'
+    #~ '+01+03'
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
 
     print '(setq h (handent "1C71") o (command "zoom" "o" h "") o (redraw h 3))'
@@ -963,7 +943,7 @@ def testBulge():
     res = unzipBulge2(s, e, bulge, 0)
     test(pline(res), "(setq o (command \"pline\" '(1784.423860002226100 4069.785491689105600) '(1784.480181158075300 4069.335807492973300) '(1784.627549781137800 4068.907239601287500) '(1784.859698003947600 4068.518015820547600) '(1785.166752121622500 4068.184690577480100) '(1785.535652539287600 4067.921440827824400) '(1785.950709221452400 4067.739463083477400) '(1786.394269019022900 4067.646497203573300) '(1786.847466491265500 4067.646497203573300) '(1787.291026288836100 4067.739463083477400) '(1787.706082971000800 4067.921440827824400) '(1788.074983388665900 4068.184690577480100) '(1788.382037506340800 4068.518015820547600) '(1788.614185729150700 4068.907239601287500) '(1788.761554352213100 4069.335807492973300) '(1788.817875508062800 4069.785491689105600) ))")
 
-#~ '+01+02'
+    #~ '+01+02'
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
 
     print '(setq h (handent "8C9A") o (command "zoom" "o" h "") o (redraw h 3))'
@@ -976,7 +956,7 @@ def testBulge():
     res = unzipBulge2(s, e, bulge, 0)
     test(pline(res), "(setq o (command \"pline\" '(1842.586840604816200 2092.875904877559200) '(1840.702944485363600 2093.075794344070800) '(1838.817015879457100 2092.896089916929200) '(1837.004772974396700 2092.344006552962600) '(1835.338975548727800 2091.441709858773300) '(1833.886503738360900 2090.225426163330700) '(1832.705672864586900 2088.743988066327300) '(1831.843892131015100 2087.056873857106400) '(1831.335761190459200 2085.231819519569900) '(1831.201681002748500 2083.342099198735500) ))")
 
-#~ 'DRAWING3'
+    #~ 'DRAWING3'
     ucsMatrix = ((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
 
     print '(setq h (handent "38C") o (command "zoom" "o" h "") o (redraw h 3))'
@@ -1019,8 +999,8 @@ def testBulge():
     res = unzipBulge2(s, e, bulge, 0)
     test(pline(res), "(setq o (command \"pline\" '(9.262996317514146 10.777716031075954) '(8.567476238901284 11.253143761091289) '(7.792336560586073 11.583201612569738) '(6.967578691103666 11.755114855073089) '(6.125124487220187 11.762229669212099) '(5.297580733815750 11.604270679526568) '(4.516977113954136 11.287351612760112) '(3.813526515400794 10.823738669006250) '(3.214455655329286 10.231375764331792) '(2.742951283324634 9.533190020133533) '(2.417262749389623 8.756204379928748) '(2.249995671627866 7.930491699319918) '(2.247624041856318 7.088010790578715) '(2.410239652864926 6.261369472183927) '(2.731548545620826 5.482562498886208) '(3.199114613926362 4.781733220109643) '(3.794840937929750 4.186006896106257) '(4.495670216706315 3.718440827800722) '(5.274477190004034 3.397131935044822) '(6.101118508398823 3.234516324036215) '(6.943599417140026 3.236887953807764) '(7.769312097748856 3.404155031569523) '(8.546297737953640 3.729843565504535) '(9.244483482151898 4.201347937509188) '(9.836846386826355 4.800418797580696) '(10.300459330580216 5.503869396134039) '(10.617378397346670 6.284473015995655) '(10.775337387032199 7.112016769400092) '(10.768222572893185 7.954470973283570) '(10.596309330389831 8.779228842765978) '(10.266251478911379 9.554368521081187) '(9.790823748896070 10.249888599694030) ))")
 
-#polyline
-#~ '+01+02
+    #polyline
+    #~ '+01+02
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
 
     print '(setq h (handent "764C") o (command "zoom" "o" h "") o (redraw h 3))'
@@ -1079,7 +1059,7 @@ def testBulge():
                     0.58605, 0)
     test(pline(res), "(setq o (command \"pline\" '(1785.715119749514500 3196.454149812359000) '(1785.508221878548300 3196.434145765690600) '(1785.308988251518700 3196.374876441802800) '(1785.124799032503500 3196.278537340228900) '(1784.962477099136300 3196.148697127500300) '(1784.828035304365600 3195.990165443877700) '(1784.726453743765900 3195.808814740985300) '(1784.661495279037400 3195.611362749975800) '(1784.635566151210200 3195.405123638206100) '(1784.649626846827900 3195.197737072266600) '(1784.703156518871500 3194.996885223621100) '(1784.794172280372300 3194.810008199747200) ))")
 
-#~ '+01+03'
+    #~ '+01+03'
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
 
     print '(setq h (handent "1C38") o (command "zoom" "o" h "") o (redraw h 3))'
@@ -1095,7 +1075,7 @@ def testBulge():
     res = unzipBulge2(s, e, bulge, 0)
     test(pline(res), "(setq o (command \"pline\" '(1766.899291648901900 4070.816085796689500) '(1767.094147209182900 4070.797158419043600) '(1767.281717750277700 4070.741085010815400) '(1767.454990719313400 4070.649961944589000) '(1767.607488095542500 4070.527195967053600) '(1767.733508579029600 4070.377376833633700) '(1767.828340740685900 4070.206105714899000) '(1767.888439164777100 4070.019785789988400) '(1767.911556998604300 4069.825382855967300) ))")
 
-#~ '+01+04'
+    #~ '+01+04'
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
 
     print '(setq h (handent "20A9") o (command "zoom" "o" h "") o (redraw h 3))'
@@ -1163,7 +1143,7 @@ def testBulge():
     res = unzipBulge2(s, e, bulge, 0)
     test(pline(res), "(setq o (command \"pline\" '(1937.180276866988400 5215.614467444201200) '(1936.965180636890200 5215.592832401392100) '(1936.758702498167200 5215.528791465192600) '(1936.569115505627000 5215.424910593327700) '(1936.404015928733300 5215.285352028598900) '(1936.270018888373900 5215.115707528380000) '(1936.172493305761500 5214.922774317096800) '(1936.115346783391300 5214.714282738704200) '(1936.100869037330100 5214.498586521424800) '(1936.129640154106000 5214.284328065070400) '(1936.200507348114600 5214.080092162023900) '(1936.310631150810900 5213.894062026402000) '(1936.455599181005900 5213.733691413443000) ))")
 
-#~ '+02+02'
+    #~ '+02+02'
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
 
     print '(setq h (handent "B8EE") o (command "zoom" "o" h "") o (redraw h 3))'
@@ -1179,7 +1159,7 @@ def testBulge():
     res = unzipBulge2(s, e, bulge, 0)
     test(pline(res), "(setq o (command \"pline\" '(2642.710929641231800 3062.314406431174600) '(2643.006407257131300 3062.285015276541800) '(2643.290305963666900 3062.197995819546100) '(2643.551500812755000 3062.056758033248100) '(2643.779756537136600 3061.866836507992500) ))")
 
-#~ '+02+03'
+    #~ '+02+03'
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
 
     print '(setq h (handent "2C1C") o (command "zoom" "o" h "") o (redraw h 3))'
@@ -1196,7 +1176,7 @@ def testBulge():
     res = unzipBulge2(s, e, bulge, 0)
     test(pline(res), "(setq o (command \"pline\" '(2884.397759879150300 4068.683421214181200) '(2884.364134119855900 4069.024829277709600) '(2884.264549061044800 4069.353117220820400) '(2884.102831700679400 4069.655669121965700) '(2883.885196746226500 4069.920858081257800) '(2883.620007786934400 4070.138493035710800) '(2883.317455885789100 4070.300210396076200) '(2882.989167942678300 4070.399795454887200) '(2882.647759879149800 4070.433421214181600) '(2882.306351815621400 4070.399795454887200) '(2881.978063872510600 4070.300210396076200) '(2881.675511971365300 4070.138493035710800) '(2881.410323012073100 4069.920858081257800) '(2881.192688057620200 4069.655669121965700) '(2881.030970697254800 4069.353117220820400) '(2880.931385638443800 4069.024829277709600) '(2880.897759879150300 4068.683421214181200) ))")
 
-#~ '+02+04'
+    #~ '+02+04'
     ucsMatrix = ((0.0, 1.0, 0.0), (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))
 
     print '(setq h (handent "2406") o (command "zoom" "o" h "") o (redraw h 3))'
@@ -1251,10 +1231,9 @@ def testBulge():
     res = unzipBulge2(s, e, bulge, 0)
     test(pline(res), "(setq o (command \"pline\" '(2638.479442463574300 5214.314022027590900) '(2638.307401707906600 5214.297425722182200) '(2638.141705947399700 5214.248248756904100) '(2637.988466181444000 5214.168304819711900) '(2637.853334021846900 5214.060542310430700) '(2637.741293256620800 5213.928935601287800) '(2637.656476043679500 5213.778338458709200) '(2637.602010513368400 5213.614305032323500) '(2637.579905400380500 5213.442885013236300) ))")
 
-# simple test (done)
-
-#~ DRAWING3.DWG
-# arc
+    # simple test (done)
+    #~ DRAWING3.DWG
+    # arc
     print '(setq h (handent "35c") o (command "zoom" "o" h "") o (redraw h 3))'
     c = (6.51036246, 7.49725474)
     s = (9.2646, 10.7755)
@@ -1263,63 +1242,75 @@ def testBulge():
     res = unzipBulge2(s, e, bulge, 0)
     test(pline(res), "(setq o (command \"pline\" '(9.264600000000000 10.775499999999999) '(8.569992984106987 11.252165107137907) '(7.795493542947305 11.583585001733763) '(6.971090110956846 11.756927184173419) '(6.128703393245425 11.765479886317594) '(5.300950403475351 11.608911949570336) '(4.519881540838221 11.293285647261214) '(3.815739606209450 10.830821954861648) '(3.215788808080345 10.239427356716856) '(2.743259098879946 9.542000511224387) '(2.416446716733554 8.765545620218870) '(2.248005759467449 7.940126832689856) '(2.244458220946123 7.097704168072487) '(2.405941461018661 6.270896031884735) '(2.726202886978012 5.491716238811870) '(3.192842052465753 4.790334445404390) '(3.787790799810272 4.193907988140984) '(4.488012854801034 3.725530357809321) '(5.266395785755434 3.403337025026928) '(6.092800790434967 3.239803239125631) '(6.935229663310625 3.241260989460013) '(7.761063758482149 3.407653832283311) '(8.538326975901107 3.732539076235879) '(9.236923868371177 4.203337241824650) '(9.829804930116616 4.801819135881764) '(10.294013947222259 5.504811681595018) '(10.611576856784744 6.285095174538959) '(10.770197698359700 7.112457223166187) '(10.763734710630146 7.954862565433315) '(10.592438138946161 8.779693466539658) '(10.262940545884351 9.555012669872752) '(9.788000000000000 10.250800000000000) ))")
 
-# polyline
+    # polyline
     print '(setq h (handent "262") o (command "zoom" "o" h "") o (redraw h 3))'
-    res = unzipBulge(-10.362722, 22.0716191, \
-        4.43220616, 2.65512736, \
+    res = unzipBulge(
+        -10.362722, 22.0716191,
+        4.43220616, 2.65512736,
         -0.4952, 1, algo=1)
     test(pline(res), "(setq o (command \"pline\" '(-10.362722000000000 22.071619099999999) '(-9.355448636159906 22.038451678625524) '(-8.352524551397659 21.939239846941103) '(-7.358275423965429 21.774411512172414) '(-6.376989516447711 21.544677589885129) '(-5.412899180199712 21.251028937758836) '(-4.470162600934584 20.894732081951972) '(-3.552845864192014 20.477323754490321) '(-2.664905418040971 20.000604265239613) '(-1.810171008656161 19.466629737049391) '(-0.992329162368174 18.877703237558475) '(-0.214907285430338 18.236364845911115) '(0.518741549918953 17.545380697226793) '(1.205453067479718 16.807731052075546) '(1.842265434823999 16.026597442416005) '(2.426432037876028 15.205348949436551) '(2.955433327241330 14.347527672484167) '(3.426987685190762 13.456833451754477) '(3.839061266429460 12.537107910635017) '(4.189876770206809 11.592317886528171) '(4.477921105932733 10.626538321617740) '(4.701951919238002 9.643934687372401) '(4.861002950331216 8.648745018590336) '(4.954388201541526 7.645261634473410) '(4.981704896072194 6.637812625569095) '(4.942835215203687 5.630743186428203) '(4.837946806453658 4.628396874491926) '(4.667492060502046 3.635096876039826) '(4.432206160000000 2.655127360000000) ))")
-    res = unzipBulge(-10.362722, 22.0716191, \
-        4.43220616, 2.65512736, \
+    res = unzipBulge(
+        -10.362722, 22.0716191,
+        4.43220616, 2.65512736,
         -0.4952, 1, algo=2)
     test(pline(res), "(setq o (command \"pline\" '(-10.362722000000000 22.071619099999999) '(-9.355448636159908 22.038451678625528) '(-8.352524551397657 21.939239846941103) '(-7.358275423965429 21.774411512172414) '(-6.376989516447712 21.544677589885133) '(-5.412899180199713 21.251028937758839) '(-4.470162600934584 20.894732081951972) '(-3.552845864192014 20.477323754490325) '(-2.664905418040969 20.000604265239616) '(-1.810171008656161 19.466629737049391) '(-0.992329162368174 18.877703237558475) '(-0.214907285430337 18.236364845911112) '(0.518741549918953 17.545380697226790) '(1.205453067479718 16.807731052075543) '(1.842265434824000 16.026597442416005) '(2.426432037876028 15.205348949436550) '(2.955433327241330 14.347527672484166) '(3.426987685190762 13.456833451754477) '(3.839061266429463 12.537107910635015) '(4.189876770206810 11.592317886528170) '(4.477921105932733 10.626538321617740) '(4.701951919238002 9.643934687372397) '(4.861002950331217 8.648745018590333) '(4.954388201541526 7.645261634473409) '(4.981704896072193 6.637812625569091) '(4.942835215203687 5.630743186428200) '(4.837946806453656 4.628396874491924) '(4.667492060502044 3.635096876039825) '(4.432206160000000 2.655127360000000) ))")
 
     print '(setq h (handent "2a4") o (command "zoom" "o" h "") o (redraw h 3))'
-    res = unzipBulge(50.0, 0.0, \
-                    49.9855, -1.2059, \
-                    165.8309, 30, algo=1)
+    res = unzipBulge(
+        50.0, 0.0,
+        49.9855, -1.2059,
+        165.8309, 30, algo=1)
     test(pline(res), "(setq o (command \"pline\" '(50.000000000000000 0.000000000000000) '(40.520678121615653 29.290850696768310) '(15.678806592335633 47.475814175894008) '(-15.107187483767646 47.660331276788419) '(-40.165251109784265 29.774445077639900) '(-49.994991155000449 0.599324024628618) '(-40.869607488486871 -28.803717497522044) '(-16.248853968097986 -47.286952439020979) '(14.532675915261141 -47.842736438662627) '(39.804621697140952 -30.260352237078475) '(49.985500000000002 -1.205900000000000) ))")
-    res = unzipBulge(50.0, 0.0, \
-                    49.9855, -1.2059, \
-                    165.8309, 30, algo=2)
+    res = unzipBulge(
+        50.0, 0.0,
+        49.9855, -1.2059,
+        165.8309, 30, algo=2)
     test(pline(res), "(setq o (command \"pline\" '(50.000000000000000 0.000000000000000) '(40.520678121615653 29.290850696953925) '(15.678806592335631 47.475814176079624) '(-15.107187483767648 47.660331276974034) '(-40.165251109784265 29.774445077825515) '(-49.994991155000449 0.599324024814232) '(-40.869607488486864 -28.803717497336429) '(-16.248853968097983 -47.286952438835357) '(14.532675915261143 -47.842736438477004) '(39.804621697140952 -30.260352236892857) '(49.985500000000002 -1.205900000000000) ))")
 
     print '(setq h (handent "1f4") o (command "zoom" "o" h "") o (redraw h 3))'
-    res = unzipBulge(5.9228, 12.0274, \
-                    8.1062, 22.8887, \
-                    2.2893, 3, algo=1)
+    res = unzipBulge(
+        5.9228, 12.0274,
+        8.1062, 22.8887,
+        2.2893, 3, algo=1)
     test(pline(res), "(setq o (command \"pline\" '(5.922800000000000 12.027400000000000) '(8.039145519640988 10.046520085199450) '(10.745881040196526 9.009029643254241) '(13.644043151694518 9.067851160084594) '(16.306452829854877 10.214314548511267) '(18.340680139844682 12.279435088977696) '(19.446887045000004 14.958821189999981) '(19.462022491509398 17.857540651007493) '(18.383855567152228 20.548332296339201) '(16.371304330007689 22.634582787826908) '(13.721011838925483 23.808786052631600) '(10.823621997469777 23.897868609813145) '(8.106199999999999 22.888700000000000) ))")
-    res = unzipBulge(5.9228, 12.0274, \
-                    8.1062, 22.8887, \
-                    2.2893, 3, algo=2)
+    res = unzipBulge(
+        5.9228, 12.0274,
+        8.1062, 22.8887,
+        2.2893, 3, algo=2)
     test(pline(res), "(setq o (command \"pline\" '(5.922800000000000 12.027400000000000) '(8.039145519640988 10.046520085199450) '(10.745881040196524 9.009029643254245) '(13.644043151694515 9.067851160084597) '(16.306452829854877 10.214314548511275) '(18.340680139844679 12.279435088977708) '(19.446887045000000 14.958821189999993) '(19.462022491509387 17.857540651007511) '(18.383855567152217 20.548332296339211) '(16.371304330007671 22.634582787826918) '(13.721011838925467 23.808786052631611) '(10.823621997469763 23.897868609813152) '(8.106199999999999 22.888700000000000) ))")
 
     print '(setq h (handent "2f8") o (command "zoom" "o" h "") o (redraw h 3))'
-    res = unzipBulge(14.25528411, 32.24935162, \
-                    19.19109489, 33.83495809, \
-                    -0.22169466, 1, algo=1)
+    res = unzipBulge(
+        14.25528411, 32.24935162,
+        19.19109489, 33.83495809,
+        -0.22169466, 1, algo=1)
     test(pline(res), "(setq o (command \"pline\" '(14.255284110000000 32.249351619999999) '(15.099960330632502 32.904771067508719) '(16.045616413158591 33.403556736364642) '(17.063519076697652 33.730553276766415) '(18.122739864614090 33.875825064531028) '(19.191094889999999 33.834958090000001) ))")
-    res = unzipBulge(19.19109489, 33.83495809, \
-                    26.09262438, 25.08326330, \
-                    -0.40962325, 1, algo=1)
+    res = unzipBulge(
+        19.19109489, 33.83495809,
+        26.09262438, 25.08326330,
+        -0.40962325, 1, algo=1)
     test(pline(res), "(setq o (command \"pline\" '(19.191094889999999 33.834958090000001) '(20.201239320607865 33.640377362054835) '(21.177767949272827 33.316888153929597) '(22.104303921776811 32.869915535045777) '(22.965308784761582 32.306955450943590) '(23.746343073056082 31.637449012674271) '(24.434308466443934 30.872624164832320) '(25.017667454785784 30.025307387530859) '(25.486636827606858 29.109708590168403) '(25.833351743236378 28.141182804421952) '(26.051997625980587 27.135972672989340) '(26.138907679350396 26.110936052668379) '(26.092624380000000 25.083263299999999) ))")
-    res = unzipBulge(14.25528411, 32.24935162, \
-                    19.19109489, 33.83495809, \
-                    -0.22169466, 1, algo=2)
+    res = unzipBulge(
+        14.25528411, 32.24935162,
+        19.19109489, 33.83495809,
+        -0.22169466, 1, algo=2)
     test(pline(res), "(setq o (command \"pline\" '(14.255284110000000 32.249351619999999) '(15.099960330632502 32.904771067508719) '(16.045616413158594 33.403556736364642) '(17.063519076697656 33.730553276766415) '(18.122739864614090 33.875825064531028) '(19.191094889999999 33.834958090000001) ))")
-    res = unzipBulge(19.19109489, 33.83495809, \
-                    26.09262438, 25.08326330, \
-                    -0.40962325, 1, algo=2)
+    res = unzipBulge(
+        19.19109489, 33.83495809,
+        26.09262438, 25.08326330,
+        -0.40962325, 1, algo=2)
     test(pline(res), "(setq o (command \"pline\" '(19.191094889999999 33.834958090000001) '(20.201239320607865 33.640377362054835) '(21.177767949272827 33.316888153929590) '(22.104303921776811 32.869915535045777) '(22.965308784761586 32.306955450943590) '(23.746343073056082 31.637449012674271) '(24.434308466443934 30.872624164832320) '(25.017667454785787 30.025307387530859) '(25.486636827606858 29.109708590168403) '(25.833351743236378 28.141182804421952) '(26.051997625980587 27.135972672989340) '(26.138907679350396 26.110936052668379) '(26.092624380000000 25.083263299999999) ))")
 
     print '(setq h (handent "2a4") o (command "zoom" "o" h "") o (redraw h 3))'
-    res = unzipBulge(50.0, 0.0, \
-                    49.98545555, -1.20591621, \
-                    165.83091089, 0, algo=1)
+    res = unzipBulge(
+        50.0, 0.0,
+        49.98545555, -1.20591621,
+        165.83091089, 0, algo=1)
     test(pline(res), "(setq o (command \"pline\" '(50.000000000000000 0.000000000000000) '(48.984313610725003 10.026815064581793) '(45.978519196451479 19.646266146624104) '(41.104734535896483 28.467539425648042) '(34.560969098325749 36.132249014323769) '(26.613079422658522 42.328997265148971) '(17.583968042771275 46.806026064506142) '(7.840464779181582 49.381445124212711) '(-2.221576623149929 49.950621721104568) '(-12.193361025215486 48.490431658337080) '(-21.669760200266452 45.060198742662664) '(-30.265772162805092 39.799284609113677) '(-37.632162819606123 32.921426812380936) '(-43.469654462287750 24.706055213828314) '(-47.541084659082017 15.486939457243267) '(-49.681041560970563 5.638628757496713) '(-49.802584164214778 -4.438765081005357) '(-47.900774502113684 -14.335823188838299) '(-44.052878262026184 -23.650453278444829) '(-38.415225677098569 -32.004225630642480) '(-31.216860226678776 -39.057747731188101) '(-22.750233182558553 -44.524452925037039) '(-13.359322057951687 -48.182242890360072) '(-3.425655676393307 -49.882510928223425) '(6.647186373548701 -49.556179474632202) '(16.449970150036723 -47.216506546185556) '(25.584433491712129 -42.958547100597677) '(33.679466395921146 -36.955291195636093) '(40.406188273822053 -29.450635843253000) '(45.491309531863180 -20.749476094592993) '(48.728234632575308 -11.205317929879740) '(49.985455549999998 -1.205916210000000) ))")
-    res = unzipBulge(50.0, 0.0, \
-                    49.98545555, -1.20591621, \
-                    165.83091089, 0, algo=2)
+    res = unzipBulge(
+        50.0, 0.0,
+        49.98545555, -1.20591621,
+        165.83091089, 0, algo=2)
     test(pline(res), "(setq o (command \"pline\" '(50.000000000000000 0.000000000000000) '(48.984313610724996 10.026814880928583) '(45.978519196451479 19.646265962970890) '(41.104734535896483 28.467539241994825) '(34.560969098325742 36.132248830670548) '(26.613079422658515 42.328997081495750) '(17.583968042771275 46.806025880852907) '(7.840464779181576 49.381444940559483) '(-2.221576623149931 49.950621537451333) '(-12.193361025215482 48.490431474683838) '(-21.669760200266452 45.060198559009415) '(-30.265772162805085 39.799284425460421) '(-37.632162819606108 32.921426628727680) '(-43.469654462287728 24.706055030175065) '(-47.541084659082003 15.486939273590002) '(-49.681041560970549 5.638628573843454) '(-49.802584164214771 -4.438765264658611) '(-47.900774502113684 -14.335823372491552) '(-44.052878262026198 -23.650453462098085) '(-38.415225677098590 -32.004225814295758) '(-31.216860226678815 -39.057747914841393) '(-22.750233182558631 -44.524453108690338) '(-13.359322057951761 -48.182243074013414) '(-3.425655676393368 -49.882511111876795) '(6.647186373548614 -49.556179658285615) '(16.449970150036663 -47.216506729839004) '(25.584433491712062 -42.958547284251175) '(33.679466395921125 -36.955291379289612) '(40.406188273822075 -29.450636026906537) '(45.491309531863237 -20.749476278246583) '(48.728234632575422 -11.205318113533332) '(49.985455549999998 -1.205916210000000) ))")
 
     #~ unzipBulge(13.0, 9.0, 21.68, 33.65, -0.45, 7)
@@ -1347,10 +1338,7 @@ def testBulge():
 
 
 def testEntity():
-    ''' проверка отрисовки примитивов
-    Если слой заморожен, такие команды не работают:
-    (setq h (handent "4331") o (redraw h 3) o (command "zoom" "o" h ""))
-    layer must be thaw!
+    '''Test layer must be thaw!
     '''
     testPoint()
     testArc()
@@ -1360,7 +1348,6 @@ def testEntity():
     testBlockReference()
     testText()
     return ecOK
-
 
 if __name__ == '__main__':
     argc = len(sys.argv)
