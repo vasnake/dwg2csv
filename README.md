@@ -24,9 +24,8 @@ Contents:
 * dwg.list -- list of input dwg files example.
 * rip.cmd -- runner cmd script example.
 * test.py -- tests for recovery DWG entities from exported data.
-
-* csv.lob2ora.py -- CSV to Oracle loader, load exported data to Oracle DB using cx_Oracle. For coords data CLOB field was used because of data size.
-* csv2ora.cmd -- cmd script for csv2ora loader.
+* ora/csv.lob2ora.py -- CSV to Oracle loader, load exported from DWG data to Oracle DB using cx_Oracle. For coords data CLOB field was used because of data size.
+* ora/csv2ora.cmd -- cmd script for csv2ora loader.
 
 extra/autocad.bulge/FacetBulge_rev1.zip -- some formulas (partly correct) from
 http://www.cadtutor.net/forum/showthread.php?51511-Points-along-a-lwpoly-arc
