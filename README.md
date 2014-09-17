@@ -9,10 +9,10 @@ For data processing and scripting the Python was selected because it's my favori
 
 Export from DWG (AutoCAD) to CSV.
 
-COM (ActiveX) AutoCAD API used for access to drawing entities and for extracting geometry and attributes from them.
+COM (ActiveX) AutoCAD API was used for access to drawing entities and for extracting geometry and attributes from them.
 
 Python modules `comtypes.client`, `comtypes.gen` used for interaction with AutoCAD.
-Module `csv.writer` used for data export.
+Module `csv.writer` for data export.
 
 For make it work you will need MS Windows, Autodesk AutoCAD, Python >= 2.5.
 
@@ -24,14 +24,15 @@ Contents:
 * dwg.list -- list of input dwg files example.
 * rip.cmd -- runner cmd script example.
 * test.py -- tests for recovery DWG entities from exported data.
-* ora/csv.lob2ora.py -- CSV to Oracle loader, load exported from DWG data to Oracle DB using cx_Oracle. For coords data CLOB field was used because of data size.
+* ora/csv.lob2ora.py -- CSV to Oracle loader, load data exported from DWG to Oracle DB using cx_Oracle. For coords data CLOB field was used because of data size.
 * ora/csv2ora.cmd -- cmd script for csv2ora loader.
 * ora/building.py -- select buildings data (polygon) from raw material and load to featureclass table.
 * ora/fountain_p.py -- same thing for fountains (point).
 
-
 extra/autocad.bulge/FacetBulge_rev1.zip -- some formulas (partly correct) from
 http://www.cadtutor.net/forum/showthread.php?51511-Points-along-a-lwpoly-arc
 
-http://vasnake.blogspot.com/2011/06/export-from-dwg-to-csv.html
-http://vasnake.blogspot.com/search/label/Autodesk
+My related blog posts:
+
+* http://vasnake.blogspot.com/2011/06/export-from-dwg-to-csv.html
+* http://vasnake.blogspot.com/search/label/Autodesk
